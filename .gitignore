@@ -1,0 +1,15 @@
+**/.#*
+build/
+*.so
+*.egg*
+__pycache__
+.vscode
+*.pyc
+*.out
+*.pdf
+*_hw*
+*.html
+
+# File systems
+*.DS_Store
+# **/*.DS_Store
