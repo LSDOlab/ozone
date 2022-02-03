@@ -5,7 +5,7 @@ import styles from './HomepageFeatures.module.css';
 const FeatureList = [
   {
     title: 'Open Source',
-    Svg: require('../../static/img/undraw_docusaurus_mountain.svg').default,
+    Svg: require('../../static/img/open-book.svg').default,
     description: (
       <>
         Ozone is open-source, allowing users to aid in development.
@@ -13,8 +13,8 @@ const FeatureList = [
     ),
   },
   {
-    title: 'ODE',
-    Svg: require('../../static/img/undraw_docusaurus_tree.svg').default,
+    title: 'Ordinary Differential Equation',
+    Svg: require('../../static/img/decrease-down-loss.svg').default,
     description: (
       <>
         Use a range of numerical methods and solution approeaches to integrate complicated ODEs.
@@ -23,7 +23,7 @@ const FeatureList = [
   },
   {
     title: 'Optimal Control',
-    Svg: require('../../static/img/undraw_docusaurus_react.svg').default,
+    Svg: require('../../static/img/plane.svg').default,
     description: (
       <>
         Derivatives are computed automatically, allowing easy gradient based optimization.

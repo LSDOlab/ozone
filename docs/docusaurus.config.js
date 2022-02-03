@@ -14,7 +14,7 @@ const config = {
   baseUrl: '/ozone/',
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
-  favicon: 'img/favicon.ico',
+  // favicon: 'img/favicon.ico',
   organizationName: 'lsdolab', // Usually your GitHub org/user name.
   projectName: 'ozone', // Usually your repo name.
 
@@ -105,7 +105,7 @@ const config = {
               },
               {
                 label: 'GitHub',
-                href: 'https://github.com/facebook/docusaurus',
+                href: 'https://github.com/LSDOlab/ozone',
               },
               {
                 label: 'LSDO Lab',
