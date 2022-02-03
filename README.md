@@ -1,7 +1,7 @@
 Getting started
 ===============
 
-ODE integration package compatible with CSDL
+ODE integration package compatible with CSDL. See documentation site for more details
 
 Introduction
 ------------
@@ -33,7 +33,7 @@ Defining an ODE and adding the integrator to a CSDL Model has the following gene
 
 Examples can be found in ``ozone/Examples``. A simple example is shown below.
 ```python
-from ozone.api import ODEProblem, Wrap
+from ozone.api import ODEProblem
 import csdl
 import csdl_om
 import numpy as np
@@ -51,7 +51,8 @@ class ODESystemModel(csdl.Model):
         n = self.parameters['num_nodes']
 
         # State y. All ODE states must have shape = (n, .. shape of state ...)
-        y = self.create_input('y', shape=n)
+        # y = self.create_input('y', shape=n)
+        y = self.declare_variable('y', shape=n)
 
         # What is num_nodes? n = num_nodes allows vectorization of the ODE:
         # for example, for n = 3:
@@ -67,22 +68,8 @@ class ODESystemModel(csdl.Model):
         # Register output
         self.register_output('dy_dt', dy_dt)
 
-# STEP 2: ODEProblem class
-
-
-class ODEProblemTest(ODEProblem):
-    def setup(self):
-        # User needs to define setup method
-        # Define ODE from Step 2.
-        self.ode_system = Wrap(ODESystemModel)
-
-        # State names and timevector correspond to respective upstream CSDL variables
-        self.add_state('y', 'dy_dt', initial_condition_name='y_0', output='y_integrated')
-        self.add_times(step_vector='h')
 
 # The CSDL Model containing the ODE integrator
-
-
 class RunModel(csdl.Model):
     def initialize(self):
         self.parameters.declare('num_times')
@@ -90,7 +77,7 @@ class RunModel(csdl.Model):
     def define(self):
         num_times = self.parameters['num_times']
 
-        dt = 0.01
+        dt = 0.1
 
         # Create inputs to the ODE
         # Initial condition for state
@@ -99,20 +86,23 @@ class RunModel(csdl.Model):
         h_vec = np.ones(num_times)*dt
         self.create_input('h', h_vec)
 
-        # ODEProblem instance from Step 2:
-        ODEProblem = ODEProblemTest('RK4', 'time-marching', num_times)
+        ode_problem = ODEProblem('RK4', 'time-marching', num_times)
+        ode_problem.add_state('y', 'dy_dt', initial_condition_name='y_0', output='y_integrated')
+        ode_problem.add_times(step_vector='h')
+        ode_problem.set_ode_system(ODESystemModel)
 
         # STEP 3: Create CSDL Model of intergator
-        self.add(ODEProblem.create_solver_model(), 'subgroup', ['*'])
+        self.add(ode_problem.create_solver_model(), 'subgroup', ['*'])
 
 
 # Simulator object:
-sim = csdl_om.Simulator(RunModel(num_times=100), mode='rev')
+sim = csdl_om.Simulator(RunModel(num_times=30), mode='rev')
 
 # Run and check derivatives
 sim.prob.run_model()
+# sim.visualize_implementation()
 print('y integrated:', sim.prob['y_integrated'])
-sim.prob.check_totals(of=['y_integrated'], wrt=['h', 'y_0'], compact_print=True)
+sim.prob.check_totals(of=['y_integrated'], wrt=['y_0'], compact_print=True)
 ```
 
 Installation

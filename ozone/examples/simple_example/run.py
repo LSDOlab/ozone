@@ -1,4 +1,4 @@
-from ozone.api import ODEProblem, Wrap
+from ozone.api import ODEProblem
 import csdl
 import csdl_om
 import numpy as np
