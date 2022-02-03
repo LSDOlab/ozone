@@ -1,7 +1,7 @@
 Getting started
 ===============
 
-ODE integration package compatible with CSDL. See documentation site for more details
+ODE integration package compatible with CSDL. See [documentation site](https://lsdolab.github.io/ozone/) for more details
 
 Introduction
 ------------
