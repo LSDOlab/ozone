@@ -31,7 +31,7 @@ Defining an ODE and adding the integrator to a CSDL Model has the following gene
 
 3. Create a CSDL Model with ```ODEProblem.create_solver_model()```
 
-Examples can be found in ``ozone/Examples``. A simple example is shown below.
+Examples can be found in ``ozone/examples``. A simple example is shown below.
 ```python
 from ozone.api import ODEProblem
 import csdl
