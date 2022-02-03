@@ -1,0 +1,32 @@
+---
+sidebar_position: 0
+---
+
+# ODE Review
+
+An ODE is a differential equation of the form
+
+$$
+\frac{\partial{y}}{\partial{t}} = f(x,y,t)
+$$
+
+with initial conditions $y(t=0) = y_0$ where
+- $y$ consists of the state variables that are integrated,
+- $t$ is the time variable, 
+- $x$ are the parameters,
+- $f$ is the ODE function. 
+
+
+## Example
+
+For example, Newton's law of cooling is
+
+$$
+\frac{\partial{T}}{\partial{t}}= k(T − T_0)
+$$
+
+where
+- $T$ is the scalar state variable that is being integrated,
+- $t$ is the time variable, 
+- $k$ and $T_0$ are parameters,
+- $k(T − T_0)$ is the ODE function. 
