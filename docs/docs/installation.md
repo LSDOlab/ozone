@@ -16,7 +16,8 @@ Models are defined using the `csdl` python package. Visit the CSDL [website](htt
 
 :::note Note
 
-Ozone relies on numpy and scipy packages. Please install them from numpy and scipy.
+Ozone relies on numpy and scipy packages. Please install them from numpy and scipy. 
+It is also recommended to have matplotlib installed for visualization.
 
 :::
 

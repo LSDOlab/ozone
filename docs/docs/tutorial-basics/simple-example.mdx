@@ -6,13 +6,101 @@ sidebar_position: 1
 
 To get an intuition on how to solve an ODE problem with `ozone`, lets walk through a simple example.
 
+## The Problem
 
-
-$$
-I = \int_0^{2\pi} \sin(x)\,dx
-$$
-
+Let's start by defining a simple ODE that we want to integrate,
 
 $$
-\underset{x_1, x_2 \in \mathbb{R}}{\text{minimize}} \quad x_1^4 + x_2^4
+\frac{\partial{y}}{\partial{t}} = -y, \quad y_0 = 0.5.
 $$
+
+We want to integrate it from $t = 0$ to $t = 3$ using 4th order Runge-Kutta (RK4). With the problem defined, let's see how to implement this in `ozone`.
+
+## Defining the ODE function.
+
+We represent our ODE function $-y$ as a `csdl` **Model()**. For those unfamiliar, `csdl` is an Embedded Domain Specific Language framework for modeling systems. For details, visit the [csdl website]('https://lsdolab.github.io/csdl/').
+
+Our csdl `Model` takes in the state $y$ as an input and outputs $dydt$:
+
+```py
+import csdl
+
+class ODESystemModel(csdl.Model):
+    def initialize(self):
+        # Required every time for ODE systems or Profile Output systems
+        self.parameters.declare('num_nodes')
+
+    def define(self):
+        # Required every time for ODE systems or Profile Output systems
+        n = self.parameters['num_nodes']
+
+        # State y. All ODE states must have shape = (n, .. shape of state ...)
+        y = self.create_input('y', shape=n)
+
+        # Register output dy/dt = -y
+        self.register_output('dy_dt', -y)
+
+```
+
+## Creating the Solver Model
+
+We now have to create a separate `csdl` model that creates our integrator.
+
+First, let's define the inputs to the ODE: initial condition $y_0 = 0.5$ and the timestep vector.
+The timestep vector is a vector of stepsizes to integrate over. Let's use a timestep of 0.01s. 
+This means the timestep vector is [0.01, 0.01, ... 0.01, 0.01] with 30 elements to go from $t = 0$ to $t = 3$. 
+Both of these must be `csdl` variables.
+
+Next, we will create the ODE solver model. Import the `ODEProblem` class from `ozone.api`. 
+Instantiate the class with three arguments:
+- Numerical Method (RK4)
+- Solution Approach (Timemarching)
+- Number of timesteps (30)
+
+We then set the state, time vector and the ODE function. Finally, we create the solver model.
+
+```py
+import numpy as np
+from ozone.api import ODEProblem
+
+# The CSDL Model containing the ODE integrator
+class RunModel(csdl.Model):
+
+    def define(self):
+        num_times = 30
+        dt = 0.1
+
+        # Create inputs to the ODE
+        # Initial condition for state
+        self.create_input('y_0', 0.5)
+
+        # Timestep vector
+        h_vec = np.ones(num_times)*dt
+        self.create_input('h', h_vec)
+
+        # Create ODEProblem class
+        ode_problem = ODEProblem('RK4', 'time-marching', num_times)
+        ode_problem.add_state('y', 'dy_dt', initial_condition_name='y_0', output='y_integrated')
+        ode_problem.add_times(step_vector='h')
+        ode_problem.set_ode_system(ODESystemModel)
+
+        # Create CSDL Model of solver
+        self.add(ode_problem.create_solver_model())
+```
+
+## Running the Model
+
+We can then run our `csdl` model. Let's also compute the derivative of the outputs with respect to the inputs.
+The output `y_integrated` is a vector of the solved state at each timestep.
+
+```py
+import csdl_om
+
+# Simulator object:
+sim = csdl_om.Simulator(RunModel(), mode='rev')
+
+# Run and check derivatives
+sim.prob.run_model()
+print('y integrated:', sim.prob['y_integrated'])
+sim.prob.check_totals(of=['y_integrated'], wrt=['y_0'], compact_print=True)
+```

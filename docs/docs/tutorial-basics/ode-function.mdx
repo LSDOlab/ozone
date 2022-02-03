@@ -1,0 +1,117 @@
+---
+sidebar_position: 4
+---
+
+# ODE Function
+
+## CSDL and Vectorization
+
+There are two important classes the user must define when using `ozone`: the class defining the ODE function and the class defining the ODE problem.
+In this section, we will go over how to properly set the ODE function. 
+
+As stated earlier, an ODE has the form
+
+$$
+\frac{\partial{y}}{\partial{t}} = f(x,y).
+$$
+
+A `csdl` model must be created to represent the above system. 
+
+However, the `csdl` model must be build with **vectorization** in mind.
+In essence, the `csdl` model have the capability to evaluate $f(x,y)$ **multiple** times with different values of $x$ and $y$ in one evaluation.
+So from the user perspective, we give inputs: n = `num_nodes` values of $y$ and n = `num_nodes` values of $x$ and outputs: n = `num_nodes` of $f$ corresponding to each input.
+
+Some examples:
+
+## 1. $f(x,y) = -y$
+
+Notice the vectorization with `n = self.parameters['num_nodes']`.
+The `initialize(self)` method with `self.parameters.declare('num_nodes')` is required.
+
+```py
+# CSDL Model defining dydt = -y
+class ODESystemModel(csdl.Model):
+    def initialize(self):
+        # Required every time, the vectorization number
+        self.parameters.declare('num_nodes')
+
+    def define(self):
+        # Required every time, the vectorization number
+        n = self.parameters['num_nodes']
+
+        # State y. All ODE states must have shape = (n, .. shape of state ...)
+        y = self.declare_variable('y', shape=n)
+
+        # What is num_nodes? n = num_nodes allows vectorization of the ODE:
+        # for example, for n = 3:
+        # [dy_dt1[0]]           [-y[0]]
+        # [dy_dt1[1]]     =     [-y[1]]
+        # [dy_dt1[2]]           [-y[2]]
+        # This allows the integrator to call this model only once to evaluate the ODE function 3 times instead of calling the model 3 separate times.
+        # num_nodes is purely implemented by the integrator meaning the user does not need to know what the value of n = num_nodes is.
+
+        # Compute output dy/dt = -y
+        # y is a vector of size n, so dydt is a vector of size n
+        dy_dt = -y
+
+        # Register output
+        self.register_output('dy_dt', dy_dt)
+```
+
+## 2. $f(x,y) = -x(t)y$
+
+In this example, a *dynamic* parameter $x(t)$ is in the ODE Function.  **Dynamic parameters must also be vectorized.**
+
+```py
+# CSDL Model defining dydt = -y
+class ODESystemModel(csdl.Model):
+    def initialize(self):
+        # Required every time, the vectorization number
+        self.parameters.declare('num_nodes')
+
+    def define(self):
+        # Required every time, the vectorization number
+        n = self.parameters['num_nodes']
+
+        # State y. All ODE states must have shape = (n, .. shape of state ...)
+        y = self.declare_variable('y', shape=n)
+        x = self.declare_variable('x', shape=n)
+
+        # Compute output dy/dt = -x*y
+        # x,y is a vector of size n, so dydt is a vector of size n
+        dy_dt = -x*y
+
+        # Register output
+        self.register_output('dy_dt', dy_dt)
+```
+
+## 3. $f(x,y) = -xy$
+In this example, a *static* parameter $x$ is in the ODE Function.  **Static parameters are NOT vectorized.**
+
+```py
+# CSDL Model defining dydt = -y
+class ODESystemModel(csdl.Model):
+    def initialize(self):
+        # Required every time, the vectorization number
+        self.parameters.declare('num_nodes')
+
+    def define(self):
+        # Required every time, the vectorization number
+        n = self.parameters['num_nodes']
+
+        # State y. All ODE states must have shape = (n, .. shape of state ...)
+        y = self.declare_variable('y', shape=n)
+        x = self.declare_variable('x')
+
+        # Compute output dy/dt = -x*y
+        # y is a vector of size n, and x is a scalar so dydt is a vector of size n
+        dy_dt = -x*y
+
+        # Register output
+        self.register_output('dy_dt', dy_dt)
+```
+
+## NativeSystem
+
+There is an alternative method to defining ODE functions using the NativeSystem class with more details in the [advanced section](../advanced/nativsystem-odes).
+NativeSystem ODEs are much faster (for now) than CSDL ODEs but require more work from the user to implement.
