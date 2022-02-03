@@ -6,7 +6,6 @@
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://lsdolab.github.io/ozone/blog"/>
     <subtitle>OZONE Blog</subtitle>
-    <icon>https://lsdolab.github.io/ozone/img/favicon.ico</icon>
     <entry>
         <title type="html"><![CDATA[Welcome]]></title>
         <id>welcome</id>
