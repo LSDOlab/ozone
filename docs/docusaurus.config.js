@@ -10,13 +10,13 @@ const katex = require('rehype-katex');
 const config = {
   title: 'OZONE',
   tagline: 'An open-source tool for solving ordinary differential equations (ODEs) and optimal control problems',
-  url: 'https://your-docusaurus-test-site.com',
-  baseUrl: '/',
+  url: 'https://lsdolab.github.io',
+  baseUrl: '/ozone/',
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
   favicon: 'img/favicon.ico',
-  organizationName: 'facebook', // Usually your GitHub org/user name.
-  projectName: 'docusaurus', // Usually your repo name.
+  organizationName: 'lsdolab', // Usually your GitHub org/user name.
+  projectName: 'ozone', // Usually your repo name.
 
   presets: [
     [
@@ -26,7 +26,7 @@ const config = {
         docs: {
           sidebarPath: require.resolve('./sidebars.js'),
           // Please change this to your repo.
-          editUrl: 'https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/',
+          editUrl: 'https://github.com/lsdolab/ozone/edit/main/website/',
           remarkPlugins: [math],
           rehypePlugins: [katex],
         },
@@ -34,7 +34,7 @@ const config = {
           showReadingTime: true,
           // Please change this to your repo.
           editUrl:
-            'https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/',
+            'https://github.com/lsdolab/ozone/edit/main/website/blog',
         },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
