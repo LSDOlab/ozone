@@ -17,8 +17,8 @@ class ODEProblem(object):
                  visualization=None,
                  dictionary_inputs=None,
                  num_checkpoints=None,
-                 implicit_solver_jvp='iterative',
-                 implicit_solver_fwd='iterative'):
+                 implicit_solver_jvp='direct',
+                 implicit_solver_fwd='direct'):
         """
         Parameters
         ----------

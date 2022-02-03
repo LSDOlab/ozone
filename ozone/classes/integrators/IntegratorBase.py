@@ -21,8 +21,8 @@ class IntegratorBase(object):
                  error_tolerance=0.000000001,
                  visualization=None,
                  num_checkpoints=None,
-                 implicit_solver_jvp='iterative',
-                 implicit_solver_fwd='iterative'):
+                 implicit_solver_jvp='direct',
+                 implicit_solver_fwd='direct'):
         """
         Arguments should be called from ODEProblem class.
 
