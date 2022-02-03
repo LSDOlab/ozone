@@ -39,4 +39,4 @@ pytest
 ```
 Note that these tests involve solving ODEs and may take a few minutes to complete all 44 tests.
 
-Running `simple_example.py` without errors can also be a quick test.
+Running `simple_example/run.py` without errors can also be a quick test.
