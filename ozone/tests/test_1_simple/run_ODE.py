@@ -5,7 +5,7 @@ from ozone.api import NativeSystem, ODEProblem
 import csdl
 import csdl_om
 import numpy as np
-from ozone.tests.test_simple.run_ODE_systems import ODESystemNative, ODESystemCSDL
+from ozone.tests.test_1_simple.run_ODE_systems import ODESystemNative, ODESystemCSDL
 
 
 def run_ode(settings_dict):

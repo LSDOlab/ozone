@@ -1,6 +1,6 @@
 
-from ozone.tests.test_general.run_ODE import run_ode
-from ozone.tests.test_general.utils_test import check_derivs, check_output, get_settings_dict
+from ozone.tests.test_2_general.run_ODE import run_ode
+from ozone.tests.test_2_general.utils_test import check_derivs, check_output, get_settings_dict
 
 import pytest
 
