@@ -32,7 +32,7 @@ class ODEComp(csdl.CustomExplicitOperation):
         self.define_dict = self.parameters['define_dict']
         self.stage_f_dict = self.parameters['stage_f_dict']
 
-        self.num_times = self.misc['num_times']
+        self.num_steps = self.misc['num_steps']
         self.num_stages = self.misc['num_stages']
 
         self.to_compute_pair = []

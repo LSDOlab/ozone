@@ -180,9 +180,9 @@ class TimeMarching(IntegratorBase):
         Method that gets called before each integration (for checkpointing)
         """
 
-        self.time_vector_full = np.zeros((self.num_times+1))
+        self.time_vector_full = np.zeros((self.num_steps+1))
         if self.times['type'] == 'step_vector':
-            self.time_vector_full[1: self.num_times +
+            self.time_vector_full[1: self.num_steps +
                                   1] = np.cumsum(self.times['val'])
             self.h_vector_full = self.times['val']
 
@@ -303,7 +303,7 @@ class TimeMarching(IntegratorBase):
         # if time range isnt specified, just solve the entire ODE, calculate outputs = True
         if (t_index_start == None) or (t_index_end == None):
             t_index_start = 0
-            t_index_end = self.num_times+1
+            t_index_end = self.num_steps+1
 
         if self.display != None:
             print('Integrating ODE ... ')
@@ -978,7 +978,7 @@ class TimeMarching(IntegratorBase):
         # Record time of JVP calculation
         start_JVP = time.time()
         if t_end_index == None:
-            t_end_index = self.num_times
+            t_end_index = self.num_steps
 
         if self.display != None:
             print('Calculating Jacobian Vector Product ...')
@@ -1102,7 +1102,7 @@ class TimeMarching(IntegratorBase):
             sd['df_dp_current'] = {}
             sd['df_dp_current+'] = {}
 
-            if self.num_times == t_end_index:
+            if self.num_steps == t_end_index:
                 self.state_dict[state_key]['psi_tA_prev'] = np.ones((sd['num_stage_state']))
 
         # part b:
@@ -1503,10 +1503,11 @@ class TimeMarching(IntegratorBase):
                             if pd['dynamic'] == False:
                                 jvp_REV[p_key] += jvp_REVadd
                             else:
-                                if t-1+t_plus == self.num_times:
-                                    jvp_REV[p_key][(t-1)*pd['num']:(t) * pd['num']] += jvp_REVadd
-                                else:
-                                    jvp_REV[p_key][(t-1+t_plus)*pd['num']:(t+t_plus) * pd['num']] += jvp_REVadd
+                                jvp_REV[p_key][(t-1+t_plus)*pd['num']:(t+t_plus) * pd['num']] += jvp_REVadd
+                                # if t-1+t_plus == self.num_steps:
+                                #     jvp_REV[p_key][(t-1)*pd['num']:(t) * pd['num']] += jvp_REVadd
+                                # else:
+                                #     jvp_REV[p_key][(t-1+t_plus)*pd['num']:(t+t_plus) * pd['num']] += jvp_REVadd
 
             # h S:
             if self.times['fixed_input'] == False:
@@ -1579,7 +1580,7 @@ class TimeMarching(IntegratorBase):
                 v_current = osnd['v'][sd['num'] * (t):sd['num']*(t+1)]
                 self.state_dict[key]['psi_tC'] += -v_current
 
-            if time_now_index+1 != self.num_times:
+            if time_now_index+1 != self.num_steps:
                 self.state_dict[key]['psi_tC'] += (sd['U_kronT']*sd['psi_tA_prev'] + sd['V_kronT']*sd['psi_tC_prev'])
 
             # PART B ----------- :

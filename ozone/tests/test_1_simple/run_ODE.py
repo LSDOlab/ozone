@@ -31,7 +31,7 @@ def run_ode(settings_dict):
 
             # Initial condition for state
             self.create_input('y_0', 0.5)
-            h_vec = np.ones(num_times)*h_stepsize
+            h_vec = np.ones(num_times-1)*h_stepsize
             self.create_input('h', h_vec)
 
             # Create Model containing integrator
@@ -58,7 +58,7 @@ def run_ode(settings_dict):
 
             self.add(ode_problem.create_solver_model())
 
-            y_out = self.declare_variable('y_integrated', shape=(nt+1,))
+            y_out = self.declare_variable('y_integrated', shape=(nt,))
 
             self.register_output('y_out', csdl.sum(y_out))
 

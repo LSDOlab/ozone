@@ -54,7 +54,7 @@ class RunModel(csdl.Model):
         self.create_input('coefficients', val=coefs)
         self.create_input('y0', val=2*np.ones((500, 1))
                           )  # State size is 500 values
-        self.create_input('h', np.ones(num)*h_initial)
+        self.create_input('h', np.ones(num-1)*h_initial)
 
         # Create ODE Model
         if nc == -1:
@@ -66,7 +66,7 @@ class RunModel(csdl.Model):
                 'ForwardEuler', 'time-marching checkpointing', num, display=None, visualization=None, num_checkpoints=nc)
         self.add(ODEProblem_instance.create_solver_model())
 
-        average = self.declare_variable('average', shape=(301, 1))
+        average = self.declare_variable('average', shape=(300, 1))
         total = csdl.sum(average)
 
         self.register_output('total', total)

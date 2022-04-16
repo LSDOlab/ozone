@@ -14,7 +14,7 @@ class SolverBased(IntegratorBase):
     def post_setup_init(self):
         super().post_setup_init()
 
-        self.num_stage_time = self.num_times*self.num_stages
+        self.num_stage_time = self.num_steps*self.num_stages
 
         self.stage_dict = {}
         self.stage_f_dict = {}
@@ -30,7 +30,7 @@ class SolverBased(IntegratorBase):
 
             # Dictionary for bookkeeping
             self.stage_dict[stage_name] = {
-                'num': self.state_dict[key]['num']*self.num_times*self.num_stages,
+                'num': self.state_dict[key]['num']*self.num_steps*self.num_stages,
                 'state_name': key,
                 'h_name': h_name,
                 'stage_comp_out_name': stage_name + '_2'}
@@ -51,16 +51,16 @@ class SolverBased(IntegratorBase):
                 self.state_dict[key]['num'], format='csc'), format='csr')
             V_kron = sp.kron(sp.csc_matrix(self.GLM_V), sp.eye(
                 self.state_dict[key]['num'], format='csc'), format='csr')
-            ImV_full = sp.eye((self.num_times+1)*self.state_dict[key]['num'], format='csc') - sp.kron(
-                sp.eye(self.num_times+1, k=-1, format='csc'), V_kron, format='csc')
+            ImV_full = sp.eye((self.num_steps+1)*self.state_dict[key]['num'], format='csc') - sp.kron(
+                sp.eye(self.num_steps+1, k=-1, format='csc'), V_kron, format='csc')
             ImV_full_inv = spln.inv(ImV_full)
 
             self.state_dict[key]['A_full'] = sp.kron(
-                sp.eye(self.num_times, format='csc'), A_kron, format='csc')
+                sp.eye(self.num_steps, format='csc'), A_kron, format='csc')
             self.state_dict[key]['U_full'] = sp.kron(
-                sp.eye(self.num_times, n=self.num_times+1, format='csc'), U_kron, format='csc')
+                sp.eye(self.num_steps, n=self.num_steps+1, format='csc'), U_kron, format='csc')
             self.state_dict[key]['B_full'] = sp.kron(sp.eye(
-                self.num_times + 1, n=self.num_times, k=-1, format='csc'), B_kron, format='csc')
+                self.num_steps + 1, n=self.num_steps, k=-1, format='csc'), B_kron, format='csc')
             self.state_dict[key]['ImV_inv'] = ImV_full_inv
             self.state_dict[key]['UImV_inv'] = self.state_dict[key]['U_full']*ImV_full_inv
 
@@ -68,17 +68,17 @@ class SolverBased(IntegratorBase):
             if type(self.state_dict[key]['shape']) == int:
                 if self.state_dict[key]['shape'] == 1:
                     self.state_dict[key]['nn_shape'] = (self.num_stage_time,)
-                    self.state_dict[key]['output_shape'] = (self.num_times+1,)
+                    self.state_dict[key]['output_shape'] = (self.num_steps+1,)
                 else:
                     self.state_dict[key]['nn_shape'] = (
                         self.num_stage_time, self.state_dict[key]['shape'])
                     self.state_dict[key]['output_shape'] = (
-                        self.num_times+1, self.state_dict[key]['shape'])
+                        self.num_steps+1, self.state_dict[key]['shape'])
             elif type(self.state_dict[key]['shape']) == tuple:
                 self.state_dict[key]['nn_shape'] = (
                     self.num_stage_time,) + self.state_dict[key]['shape']
                 self.state_dict[key]['output_shape'] = (
-                    self.num_times+1,) + self.state_dict[key]['shape']
+                    self.num_steps+1,) + self.state_dict[key]['shape']
 
         # Parameter Meta Names and shapes
         for key in self.parameter_dict:
@@ -90,7 +90,7 @@ class SolverBased(IntegratorBase):
                     proxy_shape = list(self.parameter_dict[key]['shape_dynamic'])
                 else:
                     proxy_shape = [self.parameter_dict[key]['shape_dynamic']]
-                proxy_shape[0] = self.num_stages*proxy_shape[0]
+                proxy_shape[0] = self.num_stages*(proxy_shape[0]-1)
                 proxy_shape = tuple(proxy_shape)
                 self.parameter_dict[key]['proxy_shape'] = proxy_shape
 
@@ -99,7 +99,7 @@ class SolverBased(IntegratorBase):
             state_name = self.IC_dict[key]['state_name']
             self.IC_dict[key]['meta_name'] = key+'_vector'
             self.IC_dict[key]['vector_shape'] = (
-                self.state_dict[state_name]['num']*(self.num_times+1),)
+                self.state_dict[state_name]['num']*(self.num_steps+1),)
 
         # For the csdl explicit components, we need to track the ORDER in which we declare inputs and outputs for each component
         # This is so annoyingly complex but currently cannot think of a better way
@@ -125,9 +125,9 @@ class SolverBased(IntegratorBase):
         #                 print(f'       DICTKEY: {key},    VARNAME: {name}')
         # ===================== UNCOMMENT TO SEE VARIABLE ORDERING HIERARCHY =====================
 
-        self.num_stage_time = self.num_times*self.num_stages
+        self.num_stage_time = self.num_steps*self.num_stages
 
-        return self.num_stage_time, self.num_times+1
+        return self.num_stage_time, self.num_steps+1
 
     def order_variables(self, comp_name):
         """
@@ -177,27 +177,27 @@ class SolverBased(IntegratorBase):
                     rows = []
                     cols = []
                     vals = []
-                    for i in range(self.num_times):
+                    for i in range(self.num_steps):
                         for j in range(self.num_stages):
                             # i is the timestep #
                             # j is the stage #
 
-                            if i == self.num_times-1:
-                                # if last timestep, there is no linear interpolation
-                                row_temp = np.arange(0, self.parameter_dict[key]['num'])
-                                col_temp = np.arange(0, self.parameter_dict[key]['num'])
-                                vals_temp = np.ones(self.parameter_dict[key]['num'])
+                            # if i == self.num_steps-1:
+                            #     # if last timestep, there is no linear interpolation
+                            #     row_temp = np.arange(0, self.parameter_dict[key]['num'])
+                            #     col_temp = np.arange(0, self.parameter_dict[key]['num'])
+                            #     vals_temp = np.ones(self.parameter_dict[key]['num'])
 
-                                row_temp += i * self.parameter_dict[key]['num']*self.num_stages
-                                col_temp += i*self.parameter_dict[key]['num']
+                            #     row_temp += i * self.parameter_dict[key]['num']*self.num_stages
+                            #     col_temp += i*self.parameter_dict[key]['num']
 
-                                row_temp += j*self.parameter_dict[key]['num']
+                            #     row_temp += j*self.parameter_dict[key]['num']
 
-                                rows.extend(row_temp)
-                                cols.extend(col_temp)
-                                vals.extend(vals_temp)
+                            #     rows.extend(row_temp)
+                            #     cols.extend(col_temp)
+                            #     vals.extend(vals_temp)
 
-                                continue
+                            #     continue
 
                             # PARTIALS FOR PARAMETER i
                             # diagonals of current stage and timestep
@@ -251,12 +251,12 @@ class SolverBased(IntegratorBase):
         if self.times['type'] == 'step_vector':
             # Inputs
             if comp_name == 'InputProcessComp':
-                input_dict_return[self.times['name']] = {'name': self.times['name'], 'shape': self.num_times}
+                input_dict_return[self.times['name']] = {'name': self.times['name'], 'shape': self.num_steps}
 
         for key in self.stage_dict:
             # Outputs
             state_name = self.stage_dict[key]['state_name']
-            flat_shape = (self.state_dict[state_name]['num'] * self.num_stages*self.num_times,)
+            flat_shape = (self.state_dict[state_name]['num'] * self.num_stages*self.num_steps,)
             h_name = self.stage_dict[key]['h_name']
             stage_2_name = self.stage_dict[key]['stage_comp_out_name']
             if comp_name == 'InputProcessComp':
@@ -272,13 +272,13 @@ class SolverBased(IntegratorBase):
                 cols = []
                 vals = list(np.ones(flat_shape))
                 for i in range(self.num_stages * self.state_dict[state_name]['num']):
-                    cols.extend(np.arange(0, self.num_times))
+                    cols.extend(np.arange(0, self.num_steps))
                     rows.extend(np.arange(0, flat_shape[0], self.num_stages * self.state_dict[state_name]['num'])+i)
                 partial_return.append({'of': h_name, 'wrt': self.times['name'], 'rows': rows, 'cols': cols, 'val': vals})
 
                 # Creating initial IC vector as well
                 self.stage_dict[key]['IC_vector_initialize'] = np.zeros(
-                    (self.num_times+1)*self.state_dict[state_name]['num'])
+                    (self.num_steps+1)*self.state_dict[state_name]['num'])
 
             if comp_name == 'StageComp':
                 # IC inputs:
@@ -292,7 +292,7 @@ class SolverBased(IntegratorBase):
                 partial_return.append({'of': stage_2_name, 'wrt': ICname_meta, 'val': sd['UImV_inv'].toarray()})
 
                 # Times vector inputs:
-                # flat_shape = sd['num']*self.num_stages*self.num_times
+                # flat_shape = sd['num']*self.num_stages*self.num_steps
                 h_name = self.stage_dict[key]['h_name']
                 input_dict_return[h_name] = {'name': h_name, 'shape': flat_shape}
 
@@ -304,7 +304,7 @@ class SolverBased(IntegratorBase):
                 # f:
                 f_name = sd['f_name']
                 stage_f_name = self.stage_f_dict[f_name]['res_name']
-                input_dict_return[f_name] = {'name': stage_f_name, 'shape': (self.num_times) * self.num_stages*sd['num']}
+                input_dict_return[f_name] = {'name': stage_f_name, 'shape': (self.num_steps) * self.num_stages*sd['num']}
                 partial_return.append({'of': stage_2_name, 'wrt': stage_f_name})
 
         for key in self.f2s_dict:
@@ -313,8 +313,8 @@ class SolverBased(IntegratorBase):
             # print(comp_name, key, state_name)
 
             if comp_name == 'ODEComp':
-                # self.add_output(key, shape=(self.num_times) * self.num_stages*self.state_dict[state_name]['num'])
-                output_dict_return[key] = {'name': stage_f_name, 'shape': ((self.num_times) * self.num_stages*self.state_dict[state_name]['num'],)}
+                # self.add_output(key, shape=(self.num_steps) * self.num_stages*self.state_dict[state_name]['num'])
+                output_dict_return[key] = {'name': stage_f_name, 'shape': ((self.num_steps) * self.num_stages*self.state_dict[state_name]['num'],)}
 
                 for param in self.parameter_dict:
                     proxy_name = self.parameter_dict[param]['proxy_name']
@@ -347,7 +347,7 @@ class SolverBased(IntegratorBase):
                 partial_return.append({'of': sd['meta_name'], 'wrt': icname_meta, 'val': sd['ImV_inv'].toarray()})
 
                 # Times vector inputs:
-                flat_shape = sd['num']*self.num_stages*self.num_times
+                flat_shape = sd['num']*self.num_stages*self.num_steps
                 h_name = self.stage_dict[stage_name]['h_name']
                 input_dict_return[h_name] = {'name': h_name, 'shape': flat_shape}
                 ImV_invB = sd['ImV_inv']*sd['B_full']
@@ -357,7 +357,7 @@ class SolverBased(IntegratorBase):
                 # f:
                 f_name = sd['f_name']
                 state_f_name = self.stage_f_dict[f_name]['state_name']
-                input_dict_return[f_name] = {'name': state_f_name, 'shape': (self.num_times) * self.num_stages*sd['num']}
+                input_dict_return[f_name] = {'name': state_f_name, 'shape': (self.num_steps) * self.num_stages*sd['num']}
                 partial_return.append({'of': sd['meta_name'],  'wrt': state_f_name})
 
         if comp_name == 'FieldComp':
@@ -374,10 +374,10 @@ class SolverBased(IntegratorBase):
                 coeff_name = self.field_output_dict[key]['coefficients_name']
                 if i == 0:
                     coeff_list = [coeff_name]
-                    input_dict_return[self.field_output_dict[key]['coefficients_name']] = {'name': self.field_output_dict[key]['coefficients_name'], 'shape': (self.num_times+1)}
+                    input_dict_return[self.field_output_dict[key]['coefficients_name']] = {'name': self.field_output_dict[key]['coefficients_name'], 'shape': (self.num_steps+1)}
                 elif coeff_name not in coeff_list:
                     coeff_list.append(coeff_name)
-                    input_dict_return[self.field_output_dict[key]['coefficients_name']] = {'name': self.field_output_dict[key]['coefficients_name'], 'shape': (self.num_times+1)}
+                    input_dict_return[self.field_output_dict[key]['coefficients_name']] = {'name': self.field_output_dict[key]['coefficients_name'], 'shape': (self.num_steps+1)}
 
                 # Outputs
                 of_list.append(key)
@@ -386,7 +386,7 @@ class SolverBased(IntegratorBase):
                 # Partials
                 rows = []
                 cols = []
-                for t in range(self.num_times+1):
+                for t in range(self.num_steps+1):
                     row_temp = np.arange(0, sd['num'])
                     col_temp = np.arange(0, sd['num'])
 

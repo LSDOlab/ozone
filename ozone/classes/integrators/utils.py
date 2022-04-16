@@ -18,12 +18,13 @@ def lin_interp(params, C, numtimes, nn_shape):
 
         # Current param value
         param_now = params[t]
+        param_next = params[t+1]
 
-        # Next param value
-        if t != numtimes-1:
-            param_next = params[t+1]
-        else:
-            param_next = params[t]
+        # # Next param value
+        # if t != numtimes-1:
+        #     param_next = params[t+1]
+        # else:
+        #     param_next = params[t]
 
         # Linear interpolation
         for stages, c_step in enumerate(C):

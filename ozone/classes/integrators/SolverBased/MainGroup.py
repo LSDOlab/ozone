@@ -14,7 +14,7 @@ class SolverBasedGroup(csdl.Model):
     """
 
     def define(self):
-        misc = {'num_times': self.integrator.num_times,
+        misc = {'num_steps': self.integrator.num_steps,
                 'num_stages': self.integrator.num_stages}
 
         # var = self.declare_variable('y_0')
@@ -175,7 +175,7 @@ class SolverBasedGroup(csdl.Model):
                 f_dict['shape'] = self.integrator.state_dict[state_name]['nn_shape']
                 f_dict['name'] = f_name
                 var_temp = rm.declare_variable(**f_dict)
-                flat_shape = (self.integrator.state_dict[state_name]['num']*self.integrator.num_times*self.integrator.num_stages,)
+                flat_shape = (self.integrator.state_dict[state_name]['num']*self.integrator.num_steps*self.integrator.num_stages,)
 
                 # rm.register_output(stage_f_name, csdl.reshape(var_temp, flat_shape))
                 # var_temp_add = rm.declare_variable(stage_f_name, shape=flat_shape)
@@ -316,7 +316,7 @@ class SolverBasedGroup(csdl.Model):
 
         # ---------------------- State Component ----------------------:
         # This component computes the state given F
-        misc_state = {'num_times': self.integrator.num_times,
+        misc_state = {'num_steps': self.integrator.num_steps,
                       'num_stages': self.integrator.num_stages,
                       'visualization': self.integrator.visualization,
                       'ongoingplot': self.integrator.ongoingplot}

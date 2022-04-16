@@ -46,16 +46,16 @@ class ODEProblemTest(ODEProblem):
 
 class RunModel(csdl.Model):
     def initialize(self):
-        self.parameters.declare('num_timesteps')
+        self.parameters.declare('num_times')
 
     def define(self):
-        num_times = self.parameters['num_timesteps']
+        num_times = self.parameters['num_times']
 
         h_stepsize = 0.1
 
         # Create given inputs
         # Coefficients for field output
-        coeffs = self.create_input('coefficients', np.ones(num_times+1)/(num_times+1))
+        coeffs = self.create_input('coefficients', np.ones(num_times)/(num_times))
         # Initial condition for state
         y_0 = self.create_input('y_0', 2.0)
         x_0 = self.create_input('x_0', 2.0)
@@ -77,7 +77,7 @@ class RunModel(csdl.Model):
         di = self.create_input('d', d)
 
         # Timestep vector
-        h_vec = np.ones(num_times)*h_stepsize
+        h_vec = np.ones(num_times-1)*h_stepsize
         h = self.create_input('h', h_vec)
 
         # Create Model containing integrator
@@ -91,8 +91,8 @@ class RunModel(csdl.Model):
 
 
 # Simulator Object:
-# sim = csdl_om.Simulator(RunModel(num_timesteps=100), mode='rev')
-sim = csdl_om.Simulator(RunModel(num_timesteps=10), mode='rev')
+# sim = csdl_om.Simulator(RunModel(num_times=100), mode='rev')
+sim = csdl_om.Simulator(RunModel(num_times=10), mode='rev')
 
 sim.prob.run_model()
 print(sim.prob['field_output'])

@@ -71,7 +71,7 @@ def run_ode(settings_dict):
 
             # Create given inputs
             # Coefficients for field output
-            self.create_input('coefficients', np.ones(num_times+1)/(num_times+1))
+            self.create_input('coefficients', np.ones(num_times)/(num_times))
             # Initial condition for state
             self.create_input('y_0', 2.0)
             self.create_input('x_0', 2.0)
@@ -97,7 +97,7 @@ def run_ode(settings_dict):
             self.create_input('e', e)
 
             # Timestep vector
-            h_vec = np.ones(num_times)*h_stepsize
+            h_vec = np.ones(num_times-1)*h_stepsize
             self.create_input('h', h_vec)
 
             # Create Model containing integrator
@@ -105,9 +105,9 @@ def run_ode(settings_dict):
             self.add(ODEProblem.create_solver_model(), 'subgroup', ['*'])
 
             foy = self.declare_variable('field_output_y')
-            pox = self.declare_variable('profile_output_x', shape=(num_times+1, ))
-            poz = self.declare_variable('profile_output_z', shape=(num_times+1, ))
-            z_int = self.declare_variable('z_integrated', shape=(num_times+1, 2, 2))
+            pox = self.declare_variable('profile_output_x', shape=(num_times, ))
+            poz = self.declare_variable('profile_output_z', shape=(num_times, ))
+            z_int = self.declare_variable('z_integrated', shape=(num_times, 2, 2))
             temp = csdl.reshape(z_int[-1, 0, 1], 1)
             # print(temp.shape)
 

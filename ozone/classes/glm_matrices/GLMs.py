@@ -24,10 +24,9 @@ def get_integration_method(string):
     U = method.U
     V = method.V
 
-    explicit = True
-    # Or is it if there is something on the diagonal at all, its implicit????
-    if np.any(np.diagonal(A)) == True:
-        explicit = False
+    lower = np.tril(A, -1)
+    err = np.linalg.norm(lower - A)
+    explicit = err < 1e-15
     # print(string, A, B, U, V, explicit)
     return A, B, U, V, explicit
 

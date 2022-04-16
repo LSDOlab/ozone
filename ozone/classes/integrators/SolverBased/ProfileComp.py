@@ -27,7 +27,7 @@ class ProfileComp(csdl.CustomExplicitOperation):
         self.po_system = self.parameters['profile_outputs_system']
         self.define_dict = self.parameters['define_dict']
 
-        self.num_times = self.misc['num_times']
+        self.num_steps = self.misc['num_steps']
         self.num_stages = self.misc['num_stages']
 
         self.to_compute_derivatives = []

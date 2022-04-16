@@ -30,7 +30,7 @@ class IntegratorBase(object):
         ----------
             method: str
                 Numerical method to use for time integration
-            num_times: int
+            num_steps: int
                 Number of timesteps for numerical integration
             display: str
                 Settings for what text to display during/after the integration process
@@ -47,6 +47,7 @@ class IntegratorBase(object):
         self.visualization = visualization
         self.display = display
         self.num_times = num_times
+        self.num_steps = num_times-1
         self.error_tolerance = error_tolerance
         self.method = method
         self.num_checkpoints = num_checkpoints
@@ -156,11 +157,11 @@ class IntegratorBase(object):
                 # Shape of state when vectorized accross timesteps (when set as output only)
                 if type(sd['shape']) == int:
                     if sd['shape'] == 1:
-                        sd['output_shape'] = (self.num_times+1,)
+                        sd['output_shape'] = (self.num_steps+1,)
                     else:
-                        sd['output_shape'] = (self.num_times+1, sd['shape'])
+                        sd['output_shape'] = (self.num_steps+1, sd['shape'])
                 elif type(sd['shape']) == tuple:
-                    sd['output_shape'] = (self.num_times+1,) + sd['shape']
+                    sd['output_shape'] = (self.num_steps+1,) + sd['shape']
 
                 sd['output_num'] = np.prod(sd['output_shape'])
 

@@ -42,21 +42,21 @@ class ODEProblemTest(ODEProblem):
 class RunModel(csdl.Model):
     def initialize(self):
         self.parameters.declare('a')
-        self.parameters.declare('num_timesteps')
+        self.parameters.declare('num_times')
 
     def define(self):
-        num_times = self.parameters['num_timesteps']
+        num_times = self.parameters['num_times']
         a = self.parameters['a']
 
         h_stepsize = 0.1
 
         # Create given inputs
-        self.create_input('coefficients', np.ones(num_times+1)/(num_times+1))
+        self.create_input('coefficients', np.ones(num_times)/(num_times))
         # Initial condition for state
         self.create_input('y_0', 2.0)
         self.create_input('x_0', 2.0)
         # Timestep vector
-        h_vec = np.ones(num_times)*h_stepsize
+        h_vec = np.ones(num_times-1)*h_stepsize
         self.create_input('h', h_vec)
 
         # Create model containing integrator
@@ -71,7 +71,7 @@ class RunModel(csdl.Model):
 
 
 # Simulator Object: Note we are passing in a parameter that can be used in the ode system
-sim = csdl_om.Simulator(RunModel(a=2.0, num_timesteps=1000), mode='rev')
+sim = csdl_om.Simulator(RunModel(a=2.0, num_times=1000), mode='rev')
 sim.prob.run_model()
 
 # # Checktotals

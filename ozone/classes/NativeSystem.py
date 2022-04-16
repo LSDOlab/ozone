@@ -71,6 +71,10 @@ class NativeSystem(object):
         cs_uc_run_list = []
         complex_wrt_dict = {}
 
+        # for of in in_of:
+        #     for wrt in in_wrt:
+        #         partials[of, wrt] = np.zeros(self.output_dict(of), self.input_dict(wrt))
+
         self.compute_partials(inputs, partials)
 
         if approach == 'TM':

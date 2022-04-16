@@ -67,7 +67,7 @@ from ozone.api import ODEProblem
 class RunModel(csdl.Model):
 
     def define(self):
-        num_times = 30
+        num_times = 31
         dt = 0.1
 
         # Create inputs to the ODE
@@ -75,7 +75,7 @@ class RunModel(csdl.Model):
         self.create_input('y_0', 0.5)
 
         # Timestep vector
-        h_vec = np.ones(num_times)*dt
+        h_vec = np.ones(num_times-1)*dt
         self.create_input('h', h_vec)
 
         # Create ODEProblem class

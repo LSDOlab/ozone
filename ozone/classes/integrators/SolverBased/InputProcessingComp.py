@@ -30,7 +30,7 @@ class InputProcessingComp(csdl.CustomExplicitOperation):
         self.define_dict = self.parameters['define_dict']
         self.glm_C = self.parameters['glm_C']
 
-        self.num_times = self.misc['num_times']
+        self.num_steps = self.misc['num_steps']
         self.num_stages = self.misc['num_stages']
 
         # precomputed arguments of inputs, outputs and partials
@@ -57,7 +57,7 @@ class InputProcessingComp(csdl.CustomExplicitOperation):
                 # outputs[proxy_name] = np.repeat(inputs[key], self.num_stages)
 
                 # *NEW interpolated parameter
-                temp = lin_interp(inputs[key], self.glm_C, self.num_times, self.parameter_dict[key]['nn_shape'])
+                temp = lin_interp(inputs[key], self.glm_C, self.num_steps, self.parameter_dict[key]['nn_shape'])
                 outputs[proxy_name] = np.concatenate(tuple(temp))
 
             set_dict[key] = outputs[proxy_name]

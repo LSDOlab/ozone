@@ -26,7 +26,7 @@ class ODEProblem(object):
                 Numerical method to use for time integration
             approach: str
                 Approach to use for numerical integration. Acceptable values are 'time-marching'
-            num_times: int
+            num_steps: int
                 Number of timesteps for numerical integration
             display: str
                 Settings for what text to display during/after the integration process
@@ -61,6 +61,7 @@ class ODEProblem(object):
 
         # Dictionary inputs that user can use in def setup
         self.num_times = num_times
+        self.num_steps = num_times-1  # number of time steps.
         self.dictionary_inputs = dictionary_inputs
 
         # Recorder for LSDO Dash
@@ -118,7 +119,7 @@ class ODEProblem(object):
                     temp_dict['shape'] = 1
             except:
                 raise ValueError('parameter "' + parameter_name +
-                                 '": Dynamic parameters must have shape (num_times, ..shape of parameter...). Given shape is ' + str(shape))
+                                 '": Dynamic parameters must have shape (num_steps, ..shape of parameter...). Given shape is ' + str(shape))
             temp_dict['num'] = np.prod(temp_dict['shape'])
             temp_dict['fixed_input'] = fixed_input
         else:
@@ -163,7 +164,7 @@ class ODEProblem(object):
             shape: int or Tuple[int]
                 Shape of state.
             dynamic: bool
-                If True, the parameter input varies at every timestep. Shape must be (self.num_times, parameter shape at every timestep)
+                If True, the parameter input varies at every timestep. Shape must be (self.num_steps, parameter shape at every timestep)
             fixed_input: bool
                 If true, the initial condition is fixed_input. ie. derivatives wrt initial conditions are manually set to zero and not computed. This saves computation time.
         """
@@ -243,10 +244,10 @@ class ODEProblem(object):
             shape)
         if shape == 1:
             self.integrator.profile_output_dict[profile_output_name]['shape'] = (
-                self.integrator.num_times+1, shape)
+                self.integrator.num_steps+1, shape)
         else:
             self.integrator.profile_output_dict[profile_output_name]['shape'] = (
-                self.integrator.num_times+1,) + shape
+                self.integrator.num_steps+1,) + shape
         self.integrator.profile_output_dict[profile_output_name]['num'] = np.prod(
             self.integrator.profile_output_dict[profile_output_name]['shape'])
         self.integrator.profile_output_dict[profile_output_name]['state_name'] = state_name

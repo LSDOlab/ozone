@@ -35,24 +35,24 @@ class TimeMarchingWithCheckpointing(TimeMarching):
 
         # If number of checkpoints aren't given, automatically set number of checkpoints = sqrt(num timesteps)
         if self.num_checkpoints == None:
-            self.num_checkpoints = round(self.num_times**0.5)
+            self.num_checkpoints = round(self.num_steps**0.5)
 
         # Create checkpoint indices given user-defined number of checkpoints
         # Checkpoints are uniformly distributed accross time interval
         checkpoint_indices_reversed = [0]
-        d_checks = (self.num_times)/(self.num_checkpoints+1)
+        d_checks = (self.num_steps)/(self.num_checkpoints+1)
         for i in range(self.num_checkpoints):
             checkpoint_indices_reversed.append(int((i+1)*d_checks))
         self.checkpoint_indices = list(reversed(checkpoint_indices_reversed))
 
-        # self.checkpoint_indices = [round(self.num_times/2), 0]
+        # self.checkpoint_indices = [round(self.num_steps/2), 0]
         self.num_checkpoints = len(self.checkpoint_indices)
         for i in range(len(self.checkpoint_indices)):
 
             # With checkpointing, we can't plot states in real time or after integration.
 
             if i == 0:
-                index_plus = self.num_times+1
+                index_plus = self.num_steps+1
             else:
                 index_plus = self.checkpoint_indices[i-1]
             index_minus = self.checkpoint_indices[i]
@@ -138,8 +138,8 @@ class TimeMarchingWithCheckpointing(TimeMarching):
         Method that gets called before each integration (for checkpointing)
         """
         # Creating time vector
-        self.time_vector_full = np.zeros((self.num_times+1))
+        self.time_vector_full = np.zeros((self.num_steps+1))
         if self.times['type'] == 'step_vector':
-            self.time_vector_full[1:self.num_times +
+            self.time_vector_full[1:self.num_steps +
                                   1] = np.cumsum(self.times['val'])
             self.h_vector_full = self.times['val']

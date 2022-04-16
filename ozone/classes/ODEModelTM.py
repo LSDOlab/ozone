@@ -30,7 +30,7 @@ class ODEModelTM(Model):
 
         if self.integrator.times['type'] == 'step_vector':
             tempvar = self.declare_variable(
-                self.integrator.times['name'], shape=self.integrator.num_times)
+                self.integrator.times['name'], shape=self.integrator.num_steps)
             input_var_list.append(tempvar)
 
         for i, key in enumerate(self.integrator.field_output_dict):
@@ -38,12 +38,12 @@ class ODEModelTM(Model):
             coef_name = self.integrator.field_output_dict[key]['coefficients_name']
             if i == 0:
                 coef_list = [coef_name]
-                tempvar = self.declare_variable(coef_name, shape=self.integrator.num_times+1)
+                tempvar = self.declare_variable(coef_name, shape=self.integrator.num_steps+1)
                 input_var_list.append(tempvar)
 
             elif coef_name not in coef_list:
                 coef_list.append(coef_name)
-                tempvar = self.declare_variable(coef_name, shape=self.integrator.num_times+1)
+                tempvar = self.declare_variable(coef_name, shape=self.integrator.num_steps+1)
                 input_var_list.append(tempvar)
 
         # Add custom operation and feed in the inputs declared above.
@@ -96,7 +96,7 @@ class ODEModelComp(CustomExplicitOperation):
         # time_vector inputs
         if self.integrator.times['type'] == 'step_vector':
             self.add_input(
-                self.integrator.times['name'], shape=self.integrator.num_times)
+                self.integrator.times['name'], shape=self.integrator.num_steps)
 
         # Field outputs and coefficient inputs
         for i, key in enumerate(self.integrator.field_output_dict):
@@ -106,11 +106,11 @@ class ODEModelComp(CustomExplicitOperation):
             coef_name = self.integrator.field_output_dict[key]['coefficients_name']
             if i == 0:
                 coef_list = [coef_name]
-                self.add_input(coef_name, shape=self.integrator.num_times+1)
+                self.add_input(coef_name, shape=self.integrator.num_steps+1)
 
             elif coef_name not in coef_list:
                 coef_list.append(coef_name)
-                self.add_input(coef_name, shape=self.integrator.num_times+1)
+                self.add_input(coef_name, shape=self.integrator.num_steps+1)
 
         # Profile outputs
         for key in self.integrator.profile_output_dict:
@@ -132,7 +132,7 @@ class ODEModelComp(CustomExplicitOperation):
 
                 if pd['dynamic'] == True:
                     pd['val_nodal'] = lin_interp(
-                        pd['val'], self.integrator.GLM_C, self.integrator.num_times, pd['nn_shape'])
+                        pd['val'], self.integrator.GLM_C, self.integrator.num_steps, pd['nn_shape'])
 
             elif key in self.integrator.IC_dict:
                 self.integrator.IC_dict[key]['val'] = inputs[key]

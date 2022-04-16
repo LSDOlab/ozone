@@ -34,7 +34,7 @@ class StateComp(csdl.CustomExplicitOperation):
         self.define_dict = self.parameters['define_dict']
         self.stage_f_dict = self.parameters['stage_f_dict']
 
-        self.num_times = self.misc['num_times']
+        self.num_steps = self.misc['num_steps']
         self.num_stages = self.misc['num_stages']
 
         self.ongoingplot = self.misc['ongoingplot']
@@ -75,8 +75,8 @@ class StateComp(csdl.CustomExplicitOperation):
 
             if self.visualization == 'end':
                 state_flattened = outputs[sd['meta_name']].reshape(
-                    (self.num_times+1, sd['num']))
-                time_vector_plot = np.arange(0, self.num_times+1)
+                    (self.num_steps+1, sd['num']))
+                time_vector_plot = np.arange(0, self.num_steps+1)
                 for i in range(sd['num']):
                     plt.plot(time_vector_plot, state_flattened)
                 plt.xlabel('Time')

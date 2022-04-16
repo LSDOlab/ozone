@@ -85,7 +85,7 @@ class ODEProblemTest(ODEProblem):
 # The CSDL Model containing the ODE integrator
 class RunModel(csdl.Model):
     def define(self):
-        num_times = 400
+        num_times = 401
 
         h_stepsize = 0.15
 
@@ -110,7 +110,7 @@ class RunModel(csdl.Model):
         di = self.create_input('d', d)
 
         # Timestep vector
-        h_vec = np.ones(num_times)*h_stepsize
+        h_vec = np.ones(num_times-1)*h_stepsize
         h = self.create_input('h', h_vec)
 
         # Create Model containing integrator

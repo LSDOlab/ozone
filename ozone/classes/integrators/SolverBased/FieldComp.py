@@ -25,7 +25,7 @@ class FieldComp(csdl.CustomExplicitOperation):
         self.misc = self.parameters['misc']
         self.define_dict = self.parameters['define_dict']
 
-        self.num_times = self.misc['num_times']
+        self.num_steps = self.misc['num_steps']
         self.num_stages = self.misc['num_stages']
 
         # Inputs: State, Coefficients (No partials)

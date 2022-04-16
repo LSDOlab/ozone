@@ -8,13 +8,13 @@ def check_derivs(dict):
     for key in dict:
         derivative = np.linalg.norm(dict[key])
         if key == ('y_out', 'y_0'):
-            assert pytest.approx(derivative, rel=1e-4) == 26.788803026944883
+            assert pytest.approx(derivative, rel=1e-4) == 26.047954954623957
         elif key == ('y_out', 'h'):
-            assert pytest.approx(derivative, rel=1e-4) == 40.30919627008279
+            assert pytest.approx(derivative, rel=1e-4) == 38.575000915365756
 
 
 def check_output(output):
-    assert pytest.approx(output, rel=1e-5) == 13.39440151
+    assert pytest.approx(output, rel=1e-5) == 13.0239779
 
 
 def get_settings_dict():
