@@ -28,6 +28,7 @@ def get_integration_method(string):
     err = np.linalg.norm(lower - A)
     explicit = err < 1e-15
     # print(string, A, B, U, V, explicit)
+    print(A)
     return A, B, U, V, explicit
 
 
@@ -89,8 +90,8 @@ method_classes = {
     # 'BDF5': BDF(5),
     # 'BDF6': BDF(6),
     # Starting methods with derivatives
-    'ExplicitMidpointST': ExplicitMidpointST(),
-    'KuttaThirdOrderST': KuttaThirdOrderST(),
-    'RK4ST': RK4ST(),
-    'RK6ST': RK6ST(),
+    # 'ExplicitMidpointST': ExplicitMidpointST(),
+    # 'KuttaThirdOrderST': KuttaThirdOrderST(),
+    # 'RK4ST': RK4ST(),
+    # 'RK6ST': RK6ST(),
 }

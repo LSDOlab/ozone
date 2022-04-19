@@ -83,7 +83,7 @@ class RunModel(csdl.Model):
         # Initial condition for state
         self.create_input('y_0', 1.0)
         # Timestep vector
-        h_vec = np.ones(num_times)*dt
+        h_vec = np.ones(num_times-1)*dt
         self.create_input('h', h_vec)
 
         ode_problem = ODEProblem('RK4', 'time-marching', num_times)
@@ -96,7 +96,7 @@ class RunModel(csdl.Model):
 
 
 # Simulator object:
-sim = csdl_om.Simulator(RunModel(num_times=30), mode='rev')
+sim = csdl_om.Simulator(RunModel(num_times=31), mode='rev')
 
 # Run and check derivatives
 sim.prob.run_model()

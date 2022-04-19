@@ -61,7 +61,7 @@ class RunModel(csdl.Model):
 
 
 # Simulator object:
-sim = csdl_om.Simulator(RunModel(num_times=30), mode='rev')
+sim = csdl_om.Simulator(RunModel(num_times=31), mode='rev')
 
 # Run and check derivatives
 sim.prob.run_model()
