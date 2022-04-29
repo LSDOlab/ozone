@@ -143,10 +143,6 @@ Integration methods are the first argument of the ODEProblem object and can be o
 - 'AB1'
 - 'AM1'
 - 'BDF1'
-- 'ExplicitMidpointST'
-- 'KuttaThirdOrderST'
-- 'RK4ST'
-- 'RK6ST'
 
 Solver methods are the second argument of the ODEProblem object and can be one of the following:
 - 'time-marching': Compute the state sequentially through timesteps.
