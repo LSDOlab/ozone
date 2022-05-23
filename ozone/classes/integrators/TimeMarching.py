@@ -619,8 +619,10 @@ class TimeMarching(IntegratorBase):
                 Y_iteration_eval = P[f_name].reshape(sd['shape_stage'])
                 Y_iteration_prime = Pd[f_name][key]
                 Y_iteration = sd['Y_iteration']
+
                 # Calculating Derivatives
-                Residual = Y_iteration - (sd['hAkron'])*(Y_iteration_eval) - sd['Uy']
+                Residual = Y_iteration - (sd['hAkron'])*(Y_iteration_eval) - sd['Uy']  # R
+                # Y_new = Y_old - R/(pR/pY)
 
                 # If Native System:
                 if self.OStype == 'NS':
@@ -633,7 +635,7 @@ class TimeMarching(IntegratorBase):
                     if partialtype == 'row_col' or partialtype == 'row_col_val' or partialtype == 'sparse':
 
                         if self.implicit_solver_fwd == 'direct':
-                            Y_nextiteration = Y_iteration + spln.gmres(sd['full_eye'] - sd['hAkron'] * Y_iteration_prime, (-Residual))[0]
+                            Y_nextiteration = Y_iteration + spln.gmres(sd['full_eye'] - sd['hAkron'] * Y_iteration_prime, (-Residual))[0]  # Ynew
 
                         elif self.implicit_solver_fwd == 'iterative':
                             sk_prev = np.ones(Residual.shape)

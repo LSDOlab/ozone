@@ -13,7 +13,7 @@ class ODEProblem(object):
                  approach,
                  num_times,
                  display='default',
-                 error_tolerance=0.001,
+                 error_tolerance=0.0000001,
                  visualization=None,
                  dictionary_inputs=None,
                  num_checkpoints=None,
@@ -99,6 +99,10 @@ class ODEProblem(object):
             fixed_input: bool
                 If True, the parameter is fixed_input. ie. derivatives wrt the parameters are manually set to zero and not computed. This saves computation time.
         """
+        # error:
+        if not isinstance(shape, (type((1, 2)), type(10))):
+            raise ValueError(f'parameter shape must integer or tuple')
+
         # Tell integrator class that parameters will be used for integration
         self.integrator.param_bool = True
 
@@ -106,6 +110,18 @@ class ODEProblem(object):
         temp_dict = {}
         temp_dict['dynamic'] = dynamic
         if dynamic == True:
+
+            if isinstance(shape, type((1, 2))):
+                if shape[0] != self.num_times:
+                    raise ValueError('parameter "' + parameter_name +
+                                     '": Dynamic parameters must have shape (num_timepoints, ..shape of parameter...). Given shape is ' + str(shape))
+            elif isinstance(shape, type(10)):
+                if shape != self.num_times:
+                    raise ValueError('parameter "' + parameter_name +
+                                     '": Dynamic parameters must have shape (num_timepoints, ..shape of parameter...). Given shape is ' + str(shape))
+            else:
+                raise ValueError(f'shape of parameter {parameter_name} must be an integer or tuple')
+
             temp_dict['shape_dynamic'] = shape
             temp_dict['num_dynamic'] = np.prod(shape)
             try:
@@ -119,7 +135,7 @@ class ODEProblem(object):
                     temp_dict['shape'] = 1
             except:
                 raise ValueError('parameter "' + parameter_name +
-                                 '": Dynamic parameters must have shape (num_steps, ..shape of parameter...). Given shape is ' + str(shape))
+                                 '": Dynamic parameters must have shape (num_timepoints, ..shape of parameter...). Given shape is ' + str(shape))
             temp_dict['num'] = np.prod(temp_dict['shape'])
             temp_dict['fixed_input'] = fixed_input
         else:
@@ -139,6 +155,9 @@ class ODEProblem(object):
             step_vector: str
                 A string of the upstream component that defines 1-dimensional array containing the time step at every iteration
             step_vector: iterable
+                The name of the csdl variable representing the timestep vector. Must be of size number of timesteps.
+                For example, if we want to integrate from 0 ~ 1 seconds with 5 timesteps with a timestep size of 0.2sec, step_vector could be initialized as a csdl variable with
+                [0.2, 0.2, 0.2, 0.2, 0.2] as the timestep vector.
             fixed_input: bool
                 if True, the time vector is fixed_input. ie. derivatives wrt time value are manually set to zero and not computed. This saves computation time.
         """
@@ -148,6 +167,8 @@ class ODEProblem(object):
             self.integrator.times['name'] = step_vector
             self.integrator.times['val'] = None
             self.integrator.times['fixed_input'] = fixed_input
+        else:
+            raise ValueError('step_vector has not been set.')
 
     def add_state(self, state_name, f_name, shape=1, initial_condition_name=None, fixed_input=False, output=None):
         """
@@ -168,6 +189,11 @@ class ODEProblem(object):
             fixed_input: bool
                 If true, the initial condition is fixed_input. ie. derivatives wrt initial conditions are manually set to zero and not computed. This saves computation time.
         """
+        # error:
+        if initial_condition_name is None:
+            raise ValueError(f'initial condition for {state_name} has not been set.')
+        if not isinstance(shape, (type((1, 2)), type(10))):
+            raise ValueError(f'state shape must integer or tuple')
 
         # Dictionary of state properties
         temp_dict = {
