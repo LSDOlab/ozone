@@ -333,7 +333,7 @@ class ODEProblem(object):
         """
 
         try:
-            if type(ode_system) == csdl.core.model._CompilerFrontEndMiddleEnd:
+            if issubclass(ode_system, csdl.Model):
                 self.ode_system = Wrap(ode_system)
             elif issubclass(ode_system, NativeSystem):
                 self.ode_system = ode_system()
@@ -351,7 +351,7 @@ class ODEProblem(object):
         """
 
         try:
-            if type(profile_system) == csdl.core.model._CompilerFrontEndMiddleEnd:
+            if issubclass(profile_system, csdl.Model):
                 self.profile_outputs_system = Wrap(profile_system)
             elif issubclass(profile_system, NativeSystem):
                 self.profile_outputs_system = profile_system()
