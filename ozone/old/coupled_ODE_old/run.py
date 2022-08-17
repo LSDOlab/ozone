@@ -4,7 +4,7 @@ import openmdao.api as om
 from ozone.api import ODEProblem, Wrap, NativeSystem
 from ode_systems import ODESystemModel, ODESystemNative, ODESystemNativeSparse
 import csdl
-import csdl_om
+import python_csdl_backend
 import numpy as np
 
 
@@ -50,7 +50,7 @@ class RunModel(csdl.Model):
         self.create_input('h', h_vec)
 
         # Create model containing integrator
-        self.add(ODEProblem.create_solver_model(), 'subgroup', ['*'])
+        self.add(ODEProblem.create_solver_model(), 'subgroup')
 
 
 # ODEProblem_instance
@@ -62,7 +62,7 @@ ODEProblem = ODEProblemTest('RK4', approach, num_times=num, display='default', v
 
 
 # Simulator Object:
-sim = csdl_om.Simulator(RunModel(), mode='rev')
+sim = python_csdl_backend.Simulator(RunModel(), mode='rev')
 sim.prob.run_model()
 
 # Checktotals

@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 from ozone.api import ODEProblem, Wrap, NativeSystem
 import csdl
-import csdl_om
+import python_csdl_backend
 import numpy as np
 
 
@@ -75,7 +75,7 @@ class RunModel(csdl.Model):
         ODEProblem = ODEProblemTest('RK4', 'time-marching', num_times)
 
         # STEP 3: Create CSDL Model of intergator
-        self.add(ODEProblem.create_solver_model(), 'subgroup', ['*'])
+        self.add(ODEProblem.create_solver_model(), 'subgroup')
 
 
 class ODEModelNS(NativeSystem):
@@ -93,7 +93,7 @@ class ODEModelNS(NativeSystem):
 
 
 # Simulator object:
-sim = csdl_om.Simulator(RunModel(num_times=3000), mode='rev')
+sim = python_csdl_backend.Simulator(RunModel(num_times=3000), mode='rev')
 
 # Run and check derivatives
 sim.prob.run_model()

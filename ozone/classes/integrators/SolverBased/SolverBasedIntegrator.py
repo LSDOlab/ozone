@@ -22,10 +22,10 @@ class SolverBased(IntegratorBase):
         for key in self.state_dict:
 
             # Creating dict for stages corresponding to each state:
-            stage_name = 'stage: ' + key  # name of stage
-            stage_f_name = 'stage: ' + self.state_dict[key]['f_name']  # name of f used in the residual
-            state_f_name = 'state: ' + self.state_dict[key]['f_name']  # name of f used from the output to the state comp
-            meta_name = 'state: ' + key
+            stage_name = 'stage__' + key  # name of stage
+            stage_f_name = 'stage__' + self.state_dict[key]['f_name']  # name of f used in the residual
+            state_f_name = 'state__' + self.state_dict[key]['f_name']  # name of f used from the output to the state comp
+            meta_name = 'state__' + key
             h_name = key + '_stepvector'  # name of stepsize vector
 
             # Dictionary for bookkeeping

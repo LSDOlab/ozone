@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import openmdao.api as om
 from ozone.api import ODEProblem
 import csdl
-import csdl_om
+import python_csdl_backend
 import numpy as np
 
 
@@ -90,11 +90,11 @@ class RunModel(csdl.Model):
         # Create Model containing integrator
         ODEProblem = ODEProblemTest('RK4', 'time-marching', num_times)
 
-        self.add(ODEProblem.create_solver_model(), 'subgroup', ['*'])
+        self.add(ODEProblem.create_solver_model(), 'subgroup')
 
 
 # Simulator Object:
-sim = csdl_om.Simulator(RunModel(), mode='rev')
+sim = python_csdl_backend.Simulator(RunModel(), mode='rev')
 
 sim.prob.run_model()
 

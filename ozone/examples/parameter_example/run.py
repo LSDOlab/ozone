@@ -4,7 +4,7 @@ import openmdao.api as om
 from ode_systems import ODESystemNative, ODESystemModel
 from ozone.api import ODEProblem, NativeSystem
 import csdl
-import csdl_om
+import python_csdl_backend
 import numpy as np
 
 # ODE Model with CSDL:
@@ -84,15 +84,15 @@ class RunModel(csdl.Model):
         ODEProblem = ODEProblemTest('RK4', 'time-marching', num_times, display='default', visualization='None')
         # ODEProblem = ODEProblemTest('RK4', 'solver-based', num_times, display='default', visualization='None')
 
-        self.add(ODEProblem.create_solver_model(), 'subgroup', ['*'])
+        self.add(ODEProblem.create_solver_model(), 'subgroup')
 
         fo = self.declare_variable('field_output')
         self.register_output('fo', fo*1.0)
 
 
 # Simulator Object:
-# sim = csdl_om.Simulator(RunModel(num_times=100), mode='rev')
-sim = csdl_om.Simulator(RunModel(num_times=10), mode='rev')
+# sim = python_csdl_backend.Simulator(RunModel(num_times=100), mode='rev')
+sim = python_csdl_backend.Simulator(RunModel(num_times=10), mode='rev')
 
 sim.prob.run_model()
 print(sim.prob['field_output'])

@@ -2,7 +2,7 @@
 import time as time
 from ozone.api import ODEProblem, Wrap
 import csdl
-import csdl_om
+import python_csdl_backend
 import numpy as np
 from ode_general import ODESystemModel, ODESystemOP
 from profile_general import ProfileSystemModel, ProfileSystemOP
@@ -79,7 +79,7 @@ class ODEModel(csdl.Model):
             'RK4', 'time-marching', num_times=num, display='default', visualization=None)
         # ODEProblem_instance = ODEProblemTest(
         #     'RK4', 'solver-based', num_times=num, display='default', visualization='none')
-        self.add(ODEProblem_instance.create_solver_model(), 'subgroup', ['*'])
+        self.add(ODEProblem_instance.create_solver_model(), 'subgroup')
 
         # # Output
         # out = self.declare_variable('profile_output2')
@@ -90,7 +90,7 @@ class ODEModel(csdl.Model):
 # ODEProblem_instance = ODEProblemTest(
 #     'RK4', 'time-marching', num_times=num, display='default', visualization='none')
 # ODEProblem_instance.check_partials(['ProfileSystem', 'ODESystem'])
-sim = csdl_om.Simulator(ODEModel(), mode='rev')
+sim = python_csdl_backend.Simulator(ODEModel(), mode='rev')
 tstart = time.time()
 sim.prob.run_model()
 print(sim.prob['field_output'])

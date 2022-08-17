@@ -35,7 +35,7 @@ Examples can be found in ``ozone/examples``. A simple example is shown below.
 ```python
 from ozone.api import ODEProblem
 import csdl
-import csdl_om
+import python_csdl_backend
 import numpy as np
 
 
@@ -92,11 +92,11 @@ class RunModel(csdl.Model):
         ode_problem.set_ode_system(ODESystemModel)
 
         # STEP 3: Create CSDL Model of intergator
-        self.add(ode_problem.create_solver_model(), 'subgroup', ['*'])
+        self.add(ode_problem.create_solver_model(), 'subgroup')
 
 
 # Simulator object:
-sim = csdl_om.Simulator(RunModel(num_times=31), mode='rev')
+sim = python_csdl_backend.Simulator(RunModel(num_times=31), mode='rev')
 
 # Run and check derivatives
 sim.prob.run_model()

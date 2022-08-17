@@ -3,7 +3,7 @@ import pstats
 import cProfile
 import matplotlib.pyplot as plt
 from AttitudeNative import AttitudeNS
-from csdl_om import Simulator
+from python_csdl_backend import Simulator
 from ozone.api import ODEProblem, Wrap
 from csdl import Model
 import csdl

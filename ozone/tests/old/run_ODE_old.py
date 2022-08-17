@@ -6,7 +6,7 @@ from ozone.api import ODEProblem
 import csdl
 import openmdao.api as om
 from ozone.api import Wrap, NativeSystem
-import csdl_om
+import python_csdl_backend
 import numpy as np
 
 
@@ -82,7 +82,7 @@ def run_ode(settings_dict):
             self.create_input('h', h_vec)
 
             # Create Model containing integrator
-            self.add(ODEProblem.create_solver_model(), 'subgroup', ['*'])
+            self.add(ODEProblem.create_solver_model(), 'subgroup')
 
             fox = self.declare_variable('field_output_x')
             foy = self.declare_variable('field_output_y')
@@ -104,7 +104,7 @@ def run_ode(settings_dict):
         implicit_solver_jvp=jvp_solver)
 
     # Simulator Object:
-    sim = csdl_om.Simulator(RunModel(), mode='rev')
+    sim = python_csdl_backend.Simulator(RunModel(), mode='rev')
     sim.prob.run_model()
     val = sim['total']
     print(val)

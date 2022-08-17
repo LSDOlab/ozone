@@ -5,7 +5,7 @@ import openmdao.api as om
 from ozone.api import ODEProblem, Wrap, NativeSystem
 from ode_systems import ODESystemModel, ODESystemNative, ODESystemNativeSparse
 import csdl
-import csdl_om
+import python_csdl_backend
 import numpy as np
 
 """
@@ -67,11 +67,11 @@ class RunModel(csdl.Model):
         ODEProblem = ODEProblemTest('RK4', 'time-marching', num_times, visualization='None')
         # ODEProblem = ODEProblemTest('ExplicitMidpoint', 'time-marching', num_times, visualization='None')
 
-        self.add(ODEProblem.create_solver_model(ODE_parameters=params_dict), 'subgroup', ['*'])
+        self.add(ODEProblem.create_solver_model(ODE_parameters=params_dict), 'subgroup')
 
 
 # Simulator Object: Note we are passing in a parameter that can be used in the ode system
-sim = csdl_om.Simulator(RunModel(a=2.0, num_timesteps=1000), mode='rev')
+sim = python_csdl_backend.Simulator(RunModel(a=2.0, num_timesteps=1000), mode='rev')
 sim.prob.run_model()
 
 # # Checktotals

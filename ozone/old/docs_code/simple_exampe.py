@@ -1,5 +1,5 @@
 import csdl
-import csdl_om
+import python_csdl_backend
 import numpy as np
 from ozone.api import ODEProblem
 
@@ -48,7 +48,7 @@ class RunModel(csdl.Model):
 
 
 # Simulator object:
-sim = csdl_om.Simulator(RunModel(), mode='rev')
+sim = python_csdl_backend.Simulator(RunModel(), mode='rev')
 
 # Run and check derivatives
 sim.prob.run_model()

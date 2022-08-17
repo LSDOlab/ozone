@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import openmdao.api as om
 from ozone.api import NativeSystem, ODEProblem
 import csdl
-import csdl_om
+import python_csdl_backend
 import numpy as np
 from ozone.tests.test_1_simple.run_ODE_systems import ODESystemNative, ODESystemCSDL
 
@@ -65,19 +65,25 @@ def run_ode(settings_dict):
     # Simulator Object:
     nt = settings_dict['numtimes']
 
-    sim = csdl_om.Simulator(RunModel(num_timesteps=nt), mode='rev')
-    sim.prob.run_model()
+    rep = csdl.GraphRepresentation(RunModel(num_timesteps=nt))
+    sim = python_csdl_backend.Simulator(rep, mode='rev')
+    sim.run()
 
-    # sim.prob.check_totals(of=['y_out'], wrt=['y_0', 'h'], compact_print=True)
+    # sim.check_totals(of=['y_out'], wrt=['y_0', 'h'], compact_print=True)
+    # print(sim.system_graph.promoted_to_unique)
+    # print(sim.system_graph.unpromoted_to_unique)
     # exit()
 
-    val = sim.prob['y_out']
+    val = sim['y_out']
     print('y_out: ', val)
 
-    derivative_checks = sim.prob.compute_totals(of=['y_out'], wrt=['y_0', 'h'])
+    derivative_checks = sim.compute_totals(of=['y_out'], wrt=['y_0', 'h'])
     for key in derivative_checks:
         print('derivative norm:', key, np.linalg.norm(derivative_checks[key]))
+    # sim.check_partials(compact_print=1)
+    # sim.check_totals(of=['stage__y', 'state__dy_dt'], wrt='y_0')
 
+    # exit()
     return_dict = {'output': val, 'derivative_checks': derivative_checks}
 
     if settings_dict['benchmark']:
@@ -96,12 +102,12 @@ def run_ode(settings_dict):
             time_list = []
             for i in range(num_time):
                 t_start = time.time()
-                sim.prob.compute_totals(of=['total'], wrt=['a', 'z_0', 'h', 'd'])
+                sim.compute_totals(of=['total'], wrt=['a', 'z_0', 'h', 'd'])
                 time_list.append(time.time() - t_start)
             time_list_int = []
             for i in range(num_time_int):
                 t_start = time.time()
-                sim.prob.run_model()
+                sim.run_model()
                 time_list_int.append(time.time() - t_start)
 
             print('-----------JVP------------')

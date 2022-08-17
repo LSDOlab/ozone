@@ -3,7 +3,7 @@ from ozone.api import ODEProblem, Wrap
 from checkpointsystems import ODESystemNative, ProfileSystemNative
 import matplotlib.pyplot as plt
 import time
-import csdl_om
+import python_csdl_backend
 import csdl
 
 from guppy import hpy
@@ -95,7 +95,7 @@ for j in range(2):
               nc, ' CHECKPOINTS ----------------------------------')
 
         # Simulator object
-        sim = csdl_om.Simulator(RunModel(num_checkpoints=nc), mode='rev')
+        sim = python_csdl_backend.Simulator(RunModel(num_checkpoints=nc), mode='rev')
         sim.prob.run_model()
 
         # Setup memory and time

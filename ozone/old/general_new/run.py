@@ -4,7 +4,7 @@ import openmdao.api as om
 from systems import ODESystemNative, ODESystemCSDL, POSystemNS
 from ozone.api import ODEProblem, Wrap, NativeSystem
 import csdl
-import csdl_om
+import python_csdl_backend
 import numpy as np
 
 
@@ -95,7 +95,7 @@ class RunModel(csdl.Model):
         # ODEProblem = ODEProblemTest('RK4', 'time-marching checkpointing', num_times, display='default', visualization='none')
         ODEProblem = ODEProblemTest('RK4', 'solver-based', num_times, display='default', visualization='none')
 
-        self.add(ODEProblem.create_solver_model(), 'subgroup', ['*'])
+        self.add(ODEProblem.create_solver_model(), 'subgroup')
 
         foy = self.declare_variable('field_output_y')
         pox = self.declare_variable('profile_output_x', shape=(num_times+1, ))
@@ -108,7 +108,7 @@ class RunModel(csdl.Model):
 
 # Simulator Object:
 nt = 10
-sim = csdl_om.Simulator(RunModel(num_timesteps=nt), mode='rev')
+sim = python_csdl_backend.Simulator(RunModel(num_timesteps=nt), mode='rev')
 sim.prob.run_model()
 # sim.visualize_implementation()
 

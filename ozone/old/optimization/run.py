@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import openmdao.api as om
 from ozone.api import ODEProblem, Wrap, NativeSystem
 import csdl
-import csdl_om
+import python_csdl_backend
 import numpy as np
 
 
@@ -72,7 +72,7 @@ class RunModel(csdl.Model):
         self.create_input('h', h_vec)
 
         # Create model containing integrator
-        self.add(ODEProblem.create_solver_model(), 'subgroup', ['*'])
+        self.add(ODEProblem.create_solver_model(), 'subgroup')
 
         y_0 = self.declare_variable('y_0')
         x_0 = self.declare_variable('x_0')
@@ -100,7 +100,7 @@ ODEProblem = ODEProblemTest('RK4', approach, num_times=num, display='default', v
 
 
 # Simulator Object:
-sim = csdl_om.Simulator(RunModel(), mode='rev')
+sim = python_csdl_backend.Simulator(RunModel(), mode='rev')
 
 sim.prob.driver = om.ScipyOptimizeDriver()
 sim.prob.driver.options['optimizer'] = 'SLSQP'

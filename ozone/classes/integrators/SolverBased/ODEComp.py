@@ -40,7 +40,7 @@ class ODEComp(csdl.CustomExplicitOperation):
         # precomputed arguments of inputs, outputs and partials
         for key in self.define_dict['inputs']:
             dd = self.define_dict['inputs'][key]
-            print('ode_comp input: ', dd['name'], key)
+            # print('ode_comp input: ', dd['name'], key)
             self.add_input(**dd)
         for key in self.define_dict['outputs']:
             dd = self.define_dict['outputs'][key]

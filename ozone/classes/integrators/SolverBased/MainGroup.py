@@ -48,7 +48,8 @@ class SolverBasedGroup(csdl.Model):
         output_tup_IPC_info = []
         for i, var in enumerate(output_tup_IPC):
             output_tup_IPC_info.append((var.name, var.shape))
-            # print(output_tup_IPC_info[i])
+            # print()
+            self.register_output(f'TEMP_{var.name}', var*1)
 
         # -^-^-^-^-^-^-^-^-^-^-^-^-^-^ Inputs Processing Component -^-^-^-^-^-^-^-^-^-^-^-^-^-^ #
 
@@ -68,8 +69,8 @@ class SolverBasedGroup(csdl.Model):
         # residual_model.output_tup_IPC_info = output_tup_IPC_info
 
         # =====UNCOMMENT TO VISUALIZE RESIDUAL MODEL=====:
-        # import csdl_om
-        # res_sim = csdl_om.Simulator(residual_model)
+        # import python_csdl_backend
+        # res_sim = python_csdl_backend.Simulator(residual_model)
         # # res_sim.visualize_implementation(recursive=True)
         # res_sim.prob.run_model()
         # res_sim.prob.check_partials(compact_print=True)
@@ -88,6 +89,8 @@ class SolverBasedGroup(csdl.Model):
             output_tup_IPC_r.append(var)
 
         IPC_out_key = list(self.integrator.var_order_name['InputProcessComp']['outputs'].keys())
+        # print(IPC_out_key,output_tup_IPC_info )
+        # exit()
         ODEC_out_key = list(self.integrator.var_order_name['ODEComp']['outputs'].keys())
 
         # For now, csdl models and NS models are treated the same. Hence the commented 'if'
@@ -163,8 +166,8 @@ class SolverBasedGroup(csdl.Model):
             for i in input_list_OC:
                 rm.register_output(i.name + '_p', i*1.0)
 
-            # import csdl_om
-            # simtest = csdl_om.Simulator(self.integrator.ode_system.system(num_nodes=self.integrator.numnodes))
+            # import python_csdl_backend
+            # simtest = python_csdl_backend.Simulator(self.integrator.ode_system.system(num_nodes=self.integrator.numnodes))
             # simtest.visualize_implementation()
 
             output_tup_OC = []
@@ -224,7 +227,9 @@ class SolverBasedGroup(csdl.Model):
             input_list_SgC.append(var)
 
         output_tup_SgC = csdl.custom(*input_list_SgC, op=stage_comp)
-
+        
+        # for stage_out_var in output_tup_SgC:
+        # rm.register_output(f'TEMP_{output_tup_SgC.name}', output_tup_SgC*1.0)
         if type(output_tup_SgC) != type((1, 2)):
             output_tup_SgC = (output_tup_SgC,)
 
@@ -264,11 +269,14 @@ class SolverBasedGroup(csdl.Model):
                 rm.register_output(state_f_name, output_tup_OC[i]*1.00)
 
         # == == =UNCOMMENT TO VISUALIZE RESIDUAL MODEL == == =:
-        # import csdl_om
-        # res_sim = csdl_om.Simulator(rm)
+        # import python_csdl_backend
+        # # from csdl import GraphRepresentation
+        # # GraphRepresentation(rm).visualize_graph()
+        # res_sim = python_csdl_backend.Simulator(rm, display_scripts=True, analytics=True)
         # # res_sim.visualize_implementation(recursive=True)
-        # res_sim.prob.run_model()
-        # # res_sim.prob.check_partials(compact_print=True)
+        # res_sim.run()
+        # res_sim.check_partials(compact_print=True)
+        # exit()
         # of_list = []
         # wrt_list = []
         # for i, f_name in enumerate(ODEC_out_key):

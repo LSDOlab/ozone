@@ -322,7 +322,7 @@ class ODEProblem(object):
         """
         self.integrator.recorder = recorder
 
-    def set_ode_system(self, ode_system):
+    def set_ode_system(self, ode_system, backend = 'python_csdl_backend'):
         """
         Declare the ODE system. This method MUST be called in the setup method.
 
@@ -332,15 +332,15 @@ class ODEProblem(object):
                 -NativeSystem or CSDL Model computing dydt = f(x,y)
         """
 
-        try:
-            if issubclass(ode_system, csdl.Model):
-                self.ode_system = Wrap(ode_system)
-            elif issubclass(ode_system, NativeSystem):
-                self.ode_system = ode_system()
-        except:
+        # if type(ode_system) == csdl.core.model._CompilerFrontEndMiddleEnd:
+        if issubclass(ode_system, csdl.Model):
+            self.ode_system = Wrap(ode_system, backend)
+        elif issubclass(ode_system, NativeSystem):
+            self.ode_system = ode_system()
+        else:
             raise TypeError('must be an uninstantiated CSDL Model or uninstantiated NativeSystem')
 
-    def set_profile_system(self, profile_system):
+    def set_profile_system(self, profile_system, backend = 'python_csdl_backend'):
         """
         Declare the Profile Output system. This method MUST be called in the setup method IF profile outputs are declared.
 
@@ -350,10 +350,9 @@ class ODEProblem(object):
                 -NativeSystem or CSDL Model computing dydt = f(x,y)
         """
 
-        try:
-            if issubclass(profile_system, csdl.Model):
-                self.profile_outputs_system = Wrap(profile_system)
-            elif issubclass(profile_system, NativeSystem):
-                self.profile_outputs_system = profile_system()
-        except:
+        if issubclass(profile_system, csdl.Model):
+            self.profile_outputs_system = Wrap(profile_system, backend)
+        elif issubclass(profile_system, NativeSystem):
+            self.profile_outputs_system = profile_system()
+        else:
             raise TypeError('must be an uninstantiated CSDL Model or uninstantiated NativeSystem')

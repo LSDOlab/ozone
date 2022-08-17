@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import openmdao.api as om
 from ozone.api import NativeSystem
 import csdl
-import csdl_om
+import python_csdl_backend
 import numpy as np
 from ozone.tests.test_2_general.run_ODE_systems import ODESystemNative, ODESystemCSDL, POSystemNS
 
@@ -102,7 +102,7 @@ def run_ode(settings_dict):
 
             # Create Model containing integrator
 
-            self.add(ODEProblem.create_solver_model(), 'subgroup', ['*'])
+            self.add(ODEProblem.create_solver_model(), 'subgroup')
 
             foy = self.declare_variable('field_output_y')
             pox = self.declare_variable('profile_output_x', shape=(num_times, ))
@@ -125,13 +125,13 @@ def run_ode(settings_dict):
         implicit_solver_fwd=fwd_solver,
         implicit_solver_jvp=jvp_solver)
 
-    sim = csdl_om.Simulator(RunModel(num_timesteps=nt), mode='rev')
-    sim.prob.run_model()
+    sim = python_csdl_backend.Simulator(RunModel(num_timesteps=nt), mode='rev')
+    sim.run()
 
-    val = sim.prob['total']
+    val = sim['total']
     print('total: ', val)
 
-    derivative_checks = sim.prob.compute_totals(of=['total'], wrt=['a', 'x_0', 'h'])
+    derivative_checks = sim.compute_totals(of=['total'], wrt=['a', 'x_0', 'h'])
     for key in derivative_checks:
         print('derivative norm:', key, np.linalg.norm(derivative_checks[key]))
 
@@ -153,12 +153,12 @@ def run_ode(settings_dict):
             time_list = []
             for i in range(num_time):
                 t_start = time.time()
-                sim.prob.compute_totals(of=['total'], wrt=['a', 'z_0', 'h', 'd'])
+                sim.compute_totals(of=['total'], wrt=['a', 'z_0', 'h', 'd'])
                 time_list.append(time.time() - t_start)
             time_list_int = []
             for i in range(num_time_int):
                 t_start = time.time()
-                sim.prob.run_model()
+                sim.run_model()
                 time_list_int.append(time.time() - t_start)
 
             print('-----------JVP------------')

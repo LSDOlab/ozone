@@ -242,8 +242,8 @@ class IntegratorBase(object):
             component = SolverBasedGroup()
             component.add_ODEProb(self)
 
-            # import csdl_om
-            # sim = csdl_om.Simulator(component)
+            # import python_csdl_backend
+            # sim = python_csdl_backend.Simulator(component)
             # sim.visualize_implementation()
         else:
             # If approach = explicit component, return a group

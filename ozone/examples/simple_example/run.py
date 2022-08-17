@@ -1,6 +1,7 @@
+import csdl_lite
 from ozone.api import ODEProblem
 import csdl
-import csdl_om
+import python_csdl_backend
 import numpy as np
 
 
@@ -57,14 +58,22 @@ class RunModel(csdl.Model):
         ode_problem.set_ode_system(ODESystemModel)
 
         # STEP 3: Create CSDL Model of intergator
-        self.add(ode_problem.create_solver_model(), 'subgroup', ['*'])
+        self.add(ode_problem.create_solver_model(), 'subgroup')
+
+        y_int = self.declare_variable('y_integrated', shape=(num_times,))
+        self.register_output('f', y_int[-1])
 
 
 # Simulator object:
-sim = csdl_om.Simulator(RunModel(num_times=31), mode='rev')
+sim = csdl_lite.Simulator(RunModel(num_times=31), mode='rev')
 
 # Run and check derivatives
-sim.prob.run_model()
+sim.run()
 # sim.visualize_implementation()
-print('y integrated:', sim.prob['y_integrated'])
-sim.prob.check_totals(of=['y_integrated'], wrt=['y_0'], compact_print=True)
+print('y f:', sim['f'])
+# tots = sim.compute_totals(of=['f'], wrt='y_0')
+# for key in tots:
+#     print(tots[key])
+sim.check_partials()
+exit()
+sim.prob.check_totals(of=['f'], wrt=['y_0'], compact_print=True)

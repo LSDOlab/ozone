@@ -12,7 +12,7 @@ The source code is written in Python. [Anaconda](https://www.anaconda.com/produc
 
 ### CSDL
 
-Models are defined using the `csdl` python package. Visit the CSDL [website](https://lsdolab.github.io/csdl/) and [github repository](https://github.com/LSDOlab/csdl) for installation. Further, the [`csdl_om`](https://github.com/LSDOlab/csdl_om) backend is required. 
+Models are defined using the `csdl` python package. Visit the CSDL [website](https://lsdolab.github.io/csdl/) and [github repository](https://github.com/LSDOlab/csdl) for installation. Further, the [`python_csdl_backend`](https://github.com/LSDOlab/python_csdl_backend) backend is required. 
 
 :::note Note
 

@@ -2,7 +2,7 @@
 # # Create a test by solving an ODE using the different approaches
 # def run ODE:
 import csdl
-import csdl_om
+import python_csdl_backend
 
 
 def create_prob(num_t, h, method, approach, inputs, ODEProblemClass):
@@ -21,12 +21,12 @@ def create_prob(num_t, h, method, approach, inputs, ODEProblemClass):
             # ODEProblem_instance
             ODEProblem_instance = ODEProblemClass(
                 method, approach, num_times=num, display='default', visualization='none')
-            self.add(ODEProblem_instance.create_solver_model(), 'subgroup', ['*'])
+            self.add(ODEProblem_instance.create_solver_model(), 'subgroup')
 
             # Output
             out = self.declare_variable('output')
             # self.register_output('out', out)
 
     # Backend problem that can be ran.
-    sim = csdl_om.Simulator(ODEModel(), mode='rev')
+    sim = python_csdl_backend.Simulator(ODEModel(), mode='rev')
     return sim.prob
