@@ -143,13 +143,21 @@ class ODESystemCSDL(csdl.Model):
         self.register_output('dx_dt', dx_dt)
 
 
-class POSystemNS(NativeSystem):
+class POSystemNS_OLD(NativeSystem):
 
     def setup(self):
         # Need to have ODE shapes similar as first example
         n = self.num_nodes
-        self.add_input('x', shape=n)
+        # self.add_input('x', shape=n)
+        # self.add_input('y', shape=n)
+        # self.add_input('z', shape=(n, 2, 2))
         self.add_input('y', shape=n)
+        self.add_input('x', shape=n)
+        self.add_input('a', shape=n)
+        self.add_input('b', shape=n)
+        self.add_input('g', shape=n)
+        self.add_input('d')
+        self.add_input('e', shape=(n, 2, 2))
         self.add_input('z', shape=(n, 2, 2))
 
         self.add_output('profile_output_x', shape=(n))
@@ -162,6 +170,7 @@ class POSystemNS(NativeSystem):
         rc_x = np.arange(0, n, 1)
         v_x = np.ones(n)
 
+        self.declare_partial_properties('*', '*', empty=True)
         self.declare_partial_properties('profile_output_z', 'z', rows=r_z, cols=c_z, vals=v_z)
         self.declare_partial_properties('profile_output_z', 'x', empty=True)
         self.declare_partial_properties('profile_output_z', 'y', empty=True)
@@ -175,3 +184,40 @@ class POSystemNS(NativeSystem):
 
     def compute_partials(self, inputs, partials):
         partials['profile_output_x']['y'] = np.diag(inputs['y']/2.0)
+
+
+class POSystem(csdl.Model):
+
+    # Setup sets up variables. similar to ExplicitComponnent in OpenMDAO
+    def initialize(self):
+        # Required every time for ODE systems or Profile Output systems
+        self.parameters.declare('num_nodes')
+
+    def define(self):
+        n = self.parameters['num_nodes']
+        # self.add_input('x', shape=n)
+        # self.add_input('y', shape=n)
+        # self.add_input('z', shape=(n, 2, 2))
+        y = self.create_input('y', shape=(n,))
+        x = self.create_input('x', shape=(n,))
+        a = self.create_input('a', shape=(n,))
+        b = self.create_input('b', shape=(n,))
+        g = self.create_input('g', shape=(n,))
+        d = self.create_input('d')
+        e = self.create_input('e', shape=(n, 2, 2))
+        z = self.create_input('z', shape=(n, 2, 2))
+
+        profile_output_z = csdl.reshape(z[:, 1, 1], (n,))
+        profile_output_x = x + (y/4.0)*y
+        profile_output_y = z + e + csdl.expand(a, (n, 2, 2), 'i->ijk') + csdl.expand(d, (n, 2, 2))
+
+        self.register_output('profile_output_x', profile_output_x)
+        self.register_output('profile_output_y', profile_output_y)
+        self.register_output('profile_output_z', profile_output_z)
+
+    # def compute(self, inputs, outputs):
+    #     outputs['profile_output_z'] = inputs['z'][:, 1, 1].flatten()
+    #     outputs['profile_output_x'] = inputs['x'] + inputs['y']*inputs['y']/4.0
+
+    # def compute_partials(self, inputs, partials):
+    #     partials['profile_output_x']['y'] = np.diag(inputs['y']/2.0)

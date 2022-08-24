@@ -123,17 +123,16 @@ optimizer.solve()
 optimizer.print_results()
 
 
-# Final
-# print()
-# print('optimal input torque at every timestep:')
-# print(sim['torque'])
-
-# print()
-# print('check constraint:')
-# print(sim['constraint_final_theta'])
-# print(sim['constraint_final_thetadot'])
-
-# print()
-# print('final time:')
-# print(sim['final_time'])
+# Initial run and plot
+sim.run()
+time_point_vector = np.cumsum(sim['timestep_vector'])
+time_point_vector = np.insert(time_point_vector, 0, 0.0)
+plt.plot(time_point_vector, sim['solved_theta'])
+plt.plot(time_point_vector, sim['solved_thetadot'])
+plt.xlabel('time')
+plt.ylabel('states')
+plt.title('Integrated ODE states after optimization')
+plt.legend(['theta', 'theta dot'])
+plt.grid()
+plt.show()
 

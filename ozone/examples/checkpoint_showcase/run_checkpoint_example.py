@@ -29,7 +29,7 @@ class ODEProblemTest(ODEProblem):
             'y', 'dy_dt', initial_condition_name='y0', shape=(500, 1))
 
         # Output Variables
-        self.add_profile_output('average', state_name='y')
+        self.add_profile_output('average')
 
         # ODE and Profile Output system
         self.set_ode_system(ODESystemNative)

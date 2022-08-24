@@ -373,10 +373,19 @@ class TimeMarching(IntegratorBase):
         # setting time indices
         time_now_index = t_index_start
 
+        # Setting Static Parameters:
+        param_set = {}
+        for key in self.parameter_dict:
+            if self.parameter_dict[key]['dynamic'] == False:
+                param_set[key] = self.parameter_dict[key]['val']
+        self.ode_system.set_vars(param_set)
+
         # Profile/Field Outputs for initial conditions
         if store_outputs == True:
             # Need to make sure IC's are right for checkpointing in the future.
             if self.profile_outputs_bool == True:
+                self.profile_outputs_system.set_vars(param_set)
+
                 run_dict = {}
                 output_vals = []
                 for key in self.profile_output_dict:
@@ -386,6 +395,12 @@ class TimeMarching(IntegratorBase):
                     temp = np.empty(self.state_dict[state_name]['nn_shape_profile'])
                     temp[0] = phase_initial_condition_dict[self.state_dict[state_name]['IC_name']]['val']
                     run_dict[state_name] = temp
+
+                # Updating Dynamic Parameters:
+                for key in self.parameter_dict:
+                    if self.parameter_dict[key]['dynamic'] == True:
+                        temp = np.array([self.parameter_dict[key]['val'][time_now_index].reshape(self.parameter_dict[key]['shape'])])
+                        run_dict[key] = temp
 
                 P = self.profile_outputs_system.run_model(
                     run_dict, output_vals)
@@ -405,14 +420,6 @@ class TimeMarching(IntegratorBase):
                 sd = self.state_dict[key]
                 sd['y_out'] = np.zeros(sd['output_shape'])
                 sd['y_out'][0] = phase_initial_condition_dict[sd['IC_name']]['val'].reshape(sd['shape'])
-
-        # Setting Static Parameters:
-        param_set = {}
-        for key in self.parameter_dict:
-            if self.parameter_dict[key]['dynamic'] == False:
-                param_set[key] = self.parameter_dict[key]['val']
-
-        self.ode_system.set_vars(param_set)
 
         # TIME MARCHING LOOP------:
         for t in range(numtimes):
@@ -494,6 +501,12 @@ class TimeMarching(IntegratorBase):
                         temp = np.empty(self.state_dict[state_name]['nn_shape_profile'])
                         temp[0] = self.state_dict[state_name]['y_current'].reshape(self.state_dict[state_name]['shape'])
                         run_dict[state_name] = temp
+
+                    # Updating Dynamic Parameters:
+                    for key in self.parameter_dict:
+                        if self.parameter_dict[key]['dynamic'] == True:
+                            temp = np.array([self.parameter_dict[key]['val'][time_now_index].reshape(self.parameter_dict[key]['shape'])])
+                            run_dict[key] = temp
 
                     trm = time.time()
                     P = self.profile_outputs_system.run_model(
@@ -1012,37 +1025,47 @@ class TimeMarching(IntegratorBase):
             if self.profile_outputs_bool == True:
                 run_dict = {}
                 outs = []
-                state = []
+                state_and_params = []
 
                 # Setting Key
                 for key in self.profile_output_dict:
                     outs.append(key)
 
+                # Setting initial states for profile output initial JVP
                 for state_name in self.state_dict:
                     sd = self.state_dict[state_name]
-                    state.append(state_name)
+                    state_and_params.append(state_name)
                     temp = np.empty(sd['nn_shape_profile'])
                     icname = self.state_dict[state_name]['IC_name']
                     si = self.IC_dict[icname]
                     temp[0] = si['val'].reshape(sd['shape'])
                     run_dict[state_name] = temp
 
+                # Setting initial params for profile output initial JVP
+                for param_name in self.parameter_dict:
+                    if self.parameter_dict[param_name]['dynamic'] == True:
+                        temp = np.array([self.parameter_dict[param_name]['val'][0].reshape(self.parameter_dict[param_name]['shape'])])
+                        run_dict[key] = temp
+                    state_and_params.append(param_name)
+
+                # set and compute derivatives for initial time
                 self.profile_outputs_system.set_vars(run_dict)
 
                 d = self.profile_outputs_system.compute_total_derivatives(
-                    outs, state)
+                    outs, state_and_params)
 
-                # Setting JVP
+                # Setting initial JVP
                 for key in self.profile_output_dict:
                     pd = self.profile_output_dict[key]
+                    v_cur = self.profile_output_dict[key]['v'][0:pd['num_single']]
 
+                    # profile JVP for initial condition
                     for state_name in self.state_dict:
                         if self.state_dict[state_name]['fixed_input'] == True:
                             continue
                         dnow = d[key][state_name].reshape(
                             (pd['num_single'], self.state_dict[state_name]['num']))
                         icname = self.state_dict[state_name]['IC_name']
-                        v_cur = self.profile_output_dict[key]['v'][0:pd['num_single']]
                         if self.profile_outputs_system.system_type == 'NS':
                             ptype = self.profile_outputs_system.partial_properties[key][state_name]['type']
                             if ptype == 'empty':
@@ -1054,6 +1077,34 @@ class TimeMarching(IntegratorBase):
                         if self.profile_outputs_system.system_type == 'OM':
                             jvp_REV[icname] += v_cur.dot(dnow)
 
+                    # profile JVP for initial params
+                    for param_name in self.parameter_dict:
+                        param_d = self.parameter_dict[param_name]
+                        if param_d['fixed_input'] == True:
+                            continue
+                        dnow = d[key][param_name].reshape(pd['num_single'], param_d['num'])
+                        if param_d['dynamic'] == False:
+                            if self.profile_outputs_system.system_type == 'NS':
+                                ptype = self.profile_outputs_system.partial_properties[key][param_name]['type']
+                                if ptype == 'empty':
+                                    continue
+                                elif ptype == 'std' or ptype == 'cs_uc':
+                                    jvp_REV[param_name] += v_cur.dot(dnow)
+                                elif ptype == 'row_col' or ptype == 'row_col_val' or ptype == 'sparse':
+                                    jvp_REV[param_name] += v_cur*(dnow)
+                            if self.profile_outputs_system.system_type == 'OM':
+                                jvp_REV[param_name] += v_cur.dot(dnow)
+                        else:
+                            if self.profile_outputs_system.system_type == 'NS':
+                                ptype = self.profile_outputs_system.partial_properties[key][param_name]['type']
+                                if ptype == 'empty':
+                                    continue
+                                elif ptype == 'std' or ptype == 'cs_uc':
+                                    jvp_REV[param_name][0:param_d['num']] += v_cur.dot(dnow)
+                                elif ptype == 'row_col' or ptype == 'row_col_val' or ptype == 'sparse':
+                                    jvp_REV[param_name][0:param_d['num']] += v_cur*(dnow)
+                            if self.profile_outputs_system.system_type == 'OM':
+                                jvp_REV[param_name][0:param_d['num']] += v_cur.dot(dnow)
             # Field outputs
             for key in self.field_output_dict:
                 state_name = self.field_output_dict[key]['state_name']
@@ -1342,11 +1393,45 @@ class TimeMarching(IntegratorBase):
                 #             profile_wrts.append(key)
                 #             profile_run_dict[key] = temp
             if self.profile_outputs_bool == True:
+                profile_wrts.extend(self.parameter_dict.keys())
                 for profiles in self.profile_output_dict:
                     profile_ofs.append(profiles)
                 self.profile_outputs_system.set_vars(profile_run_dict)
                 P = self.profile_outputs_system.compute_total_derivatives(
                     profile_ofs, profile_wrts)
+
+                # profile JVP for initial params
+                for profile_output in self.profile_output_dict:
+                    pd = self.profile_output_dict[profile_output]
+                    v_cur = pd['v'][pd['num_single'] * (t):pd['num_single']*(t+1)]
+
+                    for param_name in self.parameter_dict:
+                        param_d = self.parameter_dict[param_name]
+                        if param_d['fixed_input'] == True:
+                            continue
+                        dnow = P[profile_output][param_name].reshape(pd['num_single'], param_d['num'])
+                        if param_d['dynamic'] == False:
+                            if self.profile_outputs_system.system_type == 'NS':
+                                ptype = self.profile_outputs_system.partial_properties[profile_output][param_name]['type']
+                                if ptype == 'empty':
+                                    continue
+                                elif ptype == 'std' or ptype == 'cs_uc':
+                                    jvp_REV[param_name] += v_cur.dot(dnow)
+                                elif ptype == 'row_col' or ptype == 'row_col_val' or ptype == 'sparse':
+                                    jvp_REV[param_name] += v_cur*(dnow)
+                            if self.profile_outputs_system.system_type == 'OM':
+                                jvp_REV[param_name] += v_cur.dot(dnow)
+                        else:
+                            if self.profile_outputs_system.system_type == 'NS':
+                                ptype = self.profile_outputs_system.partial_properties[profile_output][param_name]['type']
+                                if ptype == 'empty':
+                                    continue
+                                elif ptype == 'std' or ptype == 'cs_uc':
+                                    jvp_REV[param_name][(t)*param_d['num']:(t+1) * param_d['num']] += v_cur.dot(dnow)
+                                elif ptype == 'row_col' or ptype == 'row_col_val' or ptype == 'sparse':
+                                    jvp_REV[param_name][(t)*param_d['num']:(t+1) * param_d['num']] += v_cur*(dnow)
+                            if self.profile_outputs_system.system_type == 'OM':
+                                jvp_REV[param_name][(t)*param_d['num']:(t+1) * param_d['num']] += v_cur.dot(dnow)
             else:
                 P = None
 

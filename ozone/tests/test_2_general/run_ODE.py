@@ -5,7 +5,7 @@ from ozone.api import NativeSystem
 import csdl
 import python_csdl_backend
 import numpy as np
-from ozone.tests.test_2_general.run_ODE_systems import ODESystemNative, ODESystemCSDL, POSystemNS
+from ozone.tests.test_2_general.run_ODE_systems import ODESystemNative, ODESystemCSDL, POSystem
 
 
 def run_ode(settings_dict):
@@ -29,6 +29,7 @@ def run_ode(settings_dict):
 
             self.add_profile_output('profile_output_x')
             self.add_profile_output('profile_output_z')
+            self.add_profile_output('profile_output_y', shape=(2, 2))
 
             # If dynamic == True, The parameter must have shape = (self.num_times, ... shape of parameter @ every timestep ...)
             # The ODE function will use the parameter value at timestep 't': parameter@ODEfunction[shape_p] = fullparameter[t, shape_p]
@@ -55,7 +56,7 @@ def run_ode(settings_dict):
                 self.set_ode_system(ODESystemNative)  # NATIVE
 
             # Profile
-            self.set_profile_system(POSystemNS)
+            self.set_profile_system(POSystem)
             # self.set_profile_system(Wrap(POSystemModel))
 
     # The CSDL Model containing the ODE integrator
@@ -107,11 +108,13 @@ def run_ode(settings_dict):
             foy = self.declare_variable('field_output_y')
             pox = self.declare_variable('profile_output_x', shape=(num_times, ))
             poz = self.declare_variable('profile_output_z', shape=(num_times, ))
+            poy = self.declare_variable('profile_output_y', shape=(num_times, 2, 2))
             z_int = self.declare_variable('z_integrated', shape=(num_times, 2, 2))
             temp = csdl.reshape(z_int[-1, 0, 1], 1)
             # print(temp.shape)
 
             self.register_output('total', pox[-1]+poz[-1]+foy[0]+temp/2.0)
+            self.register_output('total2', csdl.pnorm(poy[-1,:,:] + poy[0,:,:]))
 
     # Simulator Object:
     nt = settings_dict['numtimes']
@@ -131,7 +134,9 @@ def run_ode(settings_dict):
     val = sim['total']
     print('total: ', val)
 
-    derivative_checks = sim.compute_totals(of=['total'], wrt=['a', 'x_0', 'h'])
+    derivative_checks = sim.compute_totals(of=['total','total2'], wrt=['a', 'x_0', 'h', 'z_0', 'e'])
+    # sim.check_totals(of=['total','total2'], wrt=['a', 'x_0', 'h', 'z_0', 'e'])
+    # exit()
     for key in derivative_checks:
         print('derivative norm:', key, np.linalg.norm(derivative_checks[key]))
 
