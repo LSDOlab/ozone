@@ -28,7 +28,7 @@ def get_integration_method(string):
     err = np.linalg.norm(lower - A)
     explicit = err < 1e-15
     # print(string, A, B, U, V, explicit)
-    print(A)
+    # print(A)
     return A, B, U, V, explicit
 
 
