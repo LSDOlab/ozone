@@ -403,7 +403,27 @@ class SolverBased(IntegratorBase):
                     sd = self.state_dict[state_name]
 
                     # Inputs
-                    input_dict_return[state_name] = {'name': sd['meta_name'], 'shape': sd['output_shape']}
+                    input_dict_return[state_name] = {
+                        'name': sd['meta_name'],
+                        'shape': sd['output_shape']
+                    }
+
+                for key in self.parameter_dict:
+                    param_name = key
+                    pd = self.parameter_dict[key]
+
+                    # for key2 in pd:
+                    #     print(key, key2, pd[key2])
+
+                    if pd['dynamic']:
+                        shape = pd['shape_dynamic']
+                    else:
+                        shape = pd['shape']
+
+                    input_dict_return[param_name] = {
+                        'name': key,
+                        'shape': shape,
+                    }
 
                 for key in self.profile_output_dict:
 
@@ -414,5 +434,8 @@ class SolverBased(IntegratorBase):
                     for state_name in self.state_dict:
                         sd = self.state_dict[state_name]
                         partial_return.append({'of': key, 'wrt': sd['meta_name'], 'wrt_real': state_name})
+                    for param_name in self.parameter_dict:
+                        pd = self.parameter_dict[param_name]
+                        partial_return.append({'of': key, 'wrt': param_name, 'wrt_real': param_name})
 
         return {'inputs': input_dict_return, 'outputs': output_dict_return, 'partials': partial_return}

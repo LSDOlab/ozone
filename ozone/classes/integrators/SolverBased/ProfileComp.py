@@ -37,7 +37,7 @@ class ProfileComp(csdl.CustomExplicitOperation):
 
         for key in self.define_dict['inputs']:
             dd = self.define_dict['inputs'][key]
-            print('ode_comp input: ', dd['name'], key)
+            # print('ode_comp input: ', dd['name'], key)
             self.add_input(**dd)
         for key in self.define_dict['outputs']:
             dd = self.define_dict['outputs'][key]
@@ -48,6 +48,9 @@ class ProfileComp(csdl.CustomExplicitOperation):
         self.of_list = []
         self.wrt_list = []
         for key in self.state_dict:
+            # Inputs
+            self.wrt_list.append(key)
+        for key in self.parameter_dict:
             # Inputs
             self.wrt_list.append(key)
 
@@ -63,6 +66,10 @@ class ProfileComp(csdl.CustomExplicitOperation):
             state_name = key
             sd = self.state_dict[state_name]
             run_dict[state_name] = inputs[sd['meta_name']]
+        for key in self.parameter_dict:
+            param_name = key
+            pd = self.parameter_dict[param_name]
+            run_dict[param_name] = inputs[param_name]
 
         # Running PO system
         P = self.po_system.run_model(run_dict, self.of_list)
@@ -80,15 +87,24 @@ class ProfileComp(csdl.CustomExplicitOperation):
             state_name = key
             sd = self.state_dict[state_name]
             run_dict[state_name] = inputs[sd['meta_name']]
+        for key in self.parameter_dict:
+            param_name = key
+            pd = self.parameter_dict[param_name]
+            run_dict[param_name] = inputs[param_name]
 
         self.po_system.set_vars(run_dict)
         D = self.po_system.compute_total_derivatives(
             self.of_list, self.wrt_list, approach='SB')
 
-        for (key, state_name) in self.to_compute_derivatives:
-            sd = self.state_dict[state_name]
-
-            partials[key, sd['meta_name']] = D[key][state_name]
+        for (key, input_name) in self.to_compute_derivatives:
+            if input_name in self.state_dict:
+                sd = self.state_dict[input_name]
+                partials[key, sd['meta_name']] = D[key][input_name]
+            elif input_name in self.parameter_dict:
+                pd = self.parameter_dict[input_name]
+                partials[key, input_name] = D[key][input_name]
+            else:
+                raise KeyError(f'dev error: cannot find derivative key for {input_name}')
 
         # end = time.time()
         # print(end - start)

@@ -143,6 +143,7 @@ class ODEModelComp(CustomExplicitOperation):
                     if self.integrator.field_output_dict[field_key]['coefficients_name'] == key:
                         self.integrator.field_output_dict[field_key]['coefficients'] = inputs[key]
 
+        # Main integration:
         self.integrator.integrate_ODE()
 
         for key in outputs:
@@ -169,6 +170,7 @@ class ODEModelComp(CustomExplicitOperation):
         # ---------------------------------------------------------------------------
 
         if mode == 'rev':
+            # Main adjoint calculation:
             d_inputs_return = self.integrator.compute_JVP(d_inputs, d_outputs)
             for key in d_inputs_return:
                 d_inputs[key] = d_inputs_return[key]

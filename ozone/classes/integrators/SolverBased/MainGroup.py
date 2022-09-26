@@ -227,7 +227,7 @@ class SolverBasedGroup(csdl.Model):
             input_list_SgC.append(var)
 
         output_tup_SgC = csdl.custom(*input_list_SgC, op=stage_comp)
-        
+
         # for stage_out_var in output_tup_SgC:
         # rm.register_output(f'TEMP_{output_tup_SgC.name}', output_tup_SgC*1.0)
         if type(output_tup_SgC) != type((1, 2)):
@@ -383,7 +383,12 @@ class SolverBasedGroup(csdl.Model):
             for key in self.integrator.var_order_name['ProfileComp']['inputs']:
                 dic_temp = self.integrator.var_order_name['ProfileComp']['inputs'][key]
 
-                var = output_tup_StC[StC_out_key.index(key)]
+                if key in StC_out_key:
+                    var = output_tup_StC[StC_out_key.index(key)]
+                elif key in self.integrator.parameter_dict:
+                    var = self.declare_variable(**dic_temp)
+                else:
+                    raise KeyError(f'cannot find variable {key} for profile output comp')
 
                 input_list_PC.append(var)
 

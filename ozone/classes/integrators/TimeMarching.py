@@ -572,7 +572,7 @@ class TimeMarching(IntegratorBase):
 
         end_total = time.time()
         if self.display != None:
-            print('Unavoidable Time: ', self.trm)
+            print('Function Evaluation Time: ', self.trm)
             # print('Section Time: ', end_s - start_s)
             print('Total Integration Time: ', end_total - start_total, '\n')
         return

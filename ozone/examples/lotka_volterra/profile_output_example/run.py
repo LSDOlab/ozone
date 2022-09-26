@@ -21,7 +21,7 @@ class ODEProblemTest(ODEProblem):
     def setup(self):
         # Define field outputs, profile outputs, states, parameters, times
 
-        # profile outputs are outputs from the ode integrator that are not states. 
+        # profile outputs are outputs from the ode integrator that are not states.
         # instead they are outputs of a function of the solved states and parameters
         self.add_profile_output('profile_output1')
         self.add_profile_output('profile_output2')
@@ -84,8 +84,8 @@ class RunModel(csdl.Model):
         h = self.create_input('h', h_vec)
 
         # Create Model containing integrator
-        ODEProblem = ODEProblemTest('RK4', 'time-marching', num_times, display='default', visualization='None')
-        # ODEProblem = ODEProblemTest('RK4', 'solver-based', num_times, display='default', visualization='None')
+        # ODEProblem = ODEProblemTest('RK4', 'time-marching', num_times, display='default', visualization='None')
+        ODEProblem = ODEProblemTest('RK4', 'solver-based', num_times, display='default', visualization='None')
 
         self.add(ODEProblem.create_solver_model(), 'subgroup')
 
@@ -98,17 +98,28 @@ class RunModel(csdl.Model):
 # Simulator Object:
 # sim = python_csdl_backend.Simulator(RunModel(num_times=100), mode='rev')
 sim = python_csdl_backend.Simulator(RunModel(num_times=3), mode='rev')
+# if 1:
+#     import csdl_om
+# sim = csdl_om.Simulator(RunModel(num_times=3), mode='rev')
 
 sim.run()
 po1 = sim['po1']
+# [[3.        ]
+#  [3.01721536]
+#  [2.90723681]]
 po2 = sim['po2']
+# [[ 8.        ]
+#  [ 8.99831208]
+#  [10.18870229]]
 a = sim['a']
 b = sim['b']
 g = sim['g']
 d = sim['d']
 
-y = sim['solved_y']
-x = sim['solved_x']
+y = sim['solved_y']  # [2.         1.95054869 1.77390347]
+x = sim['solved_x']  # [2.         2.84776338 4.01479881]
+print(po1)
+print(po2)
 
 # sim.visualize_implementation()
 sim.check_totals(of=['po1', 'po2', 'solved_y'], wrt=['y_0', 'x_0', 'h', 'a', 'b', 'g', 'd'], compact_print=True)
