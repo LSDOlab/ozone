@@ -1,19 +1,32 @@
 import csdl
-from ozone.classes.integrators.SolverBased.StateComp import StateComp
-from ozone.classes.integrators.SolverBased.ProfileComp import ProfileComp
-from ozone.classes.integrators.SolverBased.InputProcessingComp import InputProcessingComp
-from ozone.classes.integrators.SolverBased.FieldComp import FieldComp
-# from ozone.classes.integrators.SolverBased.ResidualModel import ResidualModel
-from ozone.classes.integrators.SolverBased.ODEComp import ODEComp
-from ozone.classes.integrators.SolverBased.StageComp import StageComp
+from ozone.classes.integrators.vectorized.StateComp import StateComp
+from ozone.classes.integrators.vectorized.ProfileComp import ProfileComp
+from ozone.classes.integrators.vectorized.InputProcessingComp import InputProcessingComp
+from ozone.classes.integrators.vectorized.FieldComp import FieldComp
+# from ozone.classes.integrators.vectorized.ResidualModel import ResidualModel
+from ozone.classes.integrators.vectorized.ODEComp import ODEComp
+from ozone.classes.integrators.vectorized.StageComp import StageComp
+import numpy as np
 
 
-class SolverBasedGroup(csdl.Model):
+class VectorBasedGroup(csdl.Model):
     """
     This OpenMDAO groups all the solver-based classes into a group. This is what is returned to the user when they call for a component.
     """
 
+    def initialize(self):
+        self.parameters.declare('solution_type', default='none', types=str)
+
     def define(self):
+        solution_approach = self.parameters['solution_type']
+
+        if solution_approach == 'solver-based':
+            pass
+        elif solution_approach == 'collocation':
+            pass
+        else:
+            raise KeyError(f'solution approach {solution_approach} does not exist')
+
         misc = {'num_steps': self.integrator.num_steps,
                 'num_stages': self.integrator.num_stages}
 
@@ -298,28 +311,73 @@ class SolverBasedGroup(csdl.Model):
         # exit()
         # =====UNCOMMENT TO VISUALIZE RESIDUAL MODEL=====:
 
-        # Add in the residual model
-        solve_implicit = self.create_implicit_operation(rm)
+        if solution_approach == 'solver-based':
+            # Add in the residual model
+            solve_implicit = self.create_implicit_operation(rm)
 
-        # Declare residual, state
-        for stage in self.integrator.stage_dict:
-            state_stage = self.integrator.stage_dict[stage]['state_name']
-            solve_implicit.declare_state(stage, residual='res_'+state_stage, val=2.0)
+            # Declare residual, state
+            for stage in self.integrator.stage_dict:
+                state_stage = self.integrator.stage_dict[stage]['state_name']
+                solve_implicit.declare_state(stage, residual='res_'+state_stage, val=2.0)
 
-        # Fixed point nonlinear solver
-        solve_implicit.nonlinear_solver = csdl.NonlinearBlockGS(maxiter=40, iprint=1)
-        solve_implicit.linear_solver = csdl.ScipyKrylov(iprint=1)
+            # Fixed point nonlinear solver
+            solve_implicit.nonlinear_solver = csdl.NonlinearBlockGS(maxiter=40, iprint=1)
+            solve_implicit.linear_solver = csdl.ScipyKrylov(iprint=1)
 
-        # solve_implicit.nonlinear_solver = csdl.NewtonSolver(solve_subsystems=False)
-        # solve_implicit.linear_solver = csdl.DirectSolver(atol=1)
+            # solve_implicit.nonlinear_solver = csdl.NewtonSolver(solve_subsystems=False)
+            # solve_implicit.linear_solver = csdl.DirectSolver(atol=1)
 
-        # Get state outputs as declared variables
-        expose_name = []
-        for f_name in ODEC_out_key:
-            expose_name.append(self.integrator.stage_f_dict[f_name]['state_name'])
+            # Get state outputs as declared variables
+            expose_name = []
+            for f_name in ODEC_out_key:
+                expose_name.append(self.integrator.stage_f_dict[f_name]['state_name'])
 
-        # Finally adding the csdl model
-        stage_tuple = solve_implicit(*output_tup_IPC, expose=expose_name)
+            # Finally adding the csdl model
+            stage_tuple = solve_implicit(*output_tup_IPC, expose=expose_name)
+        elif solution_approach == 'collocation':
+
+            # declare equality constraints for residuals
+            for stage in self.integrator.stage_dict:
+                state_stage = self.integrator.stage_dict[stage]['state_name']
+
+                if isinstance(self.integrator.state_dict[state_stage]['nn_shape'], tuple):
+                    nn_shape = self.integrator.state_dict[state_stage]['nn_shape']
+                else:
+                    nn_shape = (self.integrator.state_dict[state_stage]['nn_shape'],)
+                flat_shape = np.prod(nn_shape)
+
+                res_var = rm.declare_variable('res_'+state_stage, shape=flat_shape)
+                constraint = rm.register_output('constraint_'+state_stage, csdl.pnorm(res_var))
+                rm.add_constraint(name='constraint_'+state_stage, equals=0.0)
+
+            # add model that computes residual model
+            self.add(rm)
+
+            # declare stage variables for state computation
+            stage_tuple = []
+            for stage in self.integrator.stage_dict:
+                state_name = self.integrator.stage_dict[stage]['state_name']
+                stage_tuple.append(self.create_input(stage,  shape=self.integrator.state_dict[state_name]['nn_shape']))
+                self.add_design_variable(stage)
+
+            # Get state outputs as declared variables
+            for f_name in ODEC_out_key:
+                state_name = self.integrator.stage_f_dict[f_name]['state_name']  # not sure what this variable is honestly.
+                state_key = self.integrator.stage_f_dict[f_name]['state_key']  # not sure what this variable is honestly.
+
+                if isinstance(self.integrator.state_dict[state_key]['nn_shape'], tuple):
+                    nn_shape = self.integrator.state_dict[state_key]['nn_shape']
+                else:
+                    nn_shape = (self.integrator.state_dict[state_key]['nn_shape'],)
+                flat_shape = np.prod(nn_shape)
+                stage_tuple.append(self.declare_variable(state_name,  shape=flat_shape))
+                # print(state_name, self.integrator.state_dict[state_key]['nn_shape'])
+            # exit()
+            # x = self.create_input('collocation_temp_in')
+            # self.register_output('collocation_temp_out', x*1.0)
+            # self.add_objective('collocation_temp_out')
+            # exit()
+
         # ^=^=^=^=^=^=^=^=^=^=^=^=^=^RESIDUAL ^=^=^=^=^=^=^=^=^=^=^=^=^=^ #
 
         # ---------------------- State Component ----------------------:

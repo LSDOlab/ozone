@@ -6,10 +6,11 @@ import scipy.linalg as ln
 import numpy as np
 import matplotlib.pyplot as plt
 
-from ozone.classes.integrators.SolverBased.ODEComp import ODEComp
+from ozone.classes.integrators.vectorized.ODEComp import ODEComp
+from ozone.classes.integrators.vectorized.MainGroup import VectorBasedGroup
 
 
-class SolverBased(IntegratorBase):
+class VectorBased(IntegratorBase):
 
     def post_setup_init(self):
         super().post_setup_init()
@@ -37,6 +38,7 @@ class SolverBased(IntegratorBase):
             self.stage_f_dict[self.state_dict[key]['f_name']] = {}
             self.stage_f_dict[self.state_dict[key]['f_name']]['res_name'] = stage_f_name
             self.stage_f_dict[self.state_dict[key]['f_name']]['state_name'] = state_f_name
+            self.stage_f_dict[self.state_dict[key]['f_name']]['state_key'] = key
 
             self.state_dict[key]['h_name'] = h_name
             self.state_dict[key]['stage_name'] = stage_name
@@ -439,3 +441,11 @@ class SolverBased(IntegratorBase):
                         partial_return.append({'of': key, 'wrt': param_name, 'wrt_real': param_name})
 
         return {'inputs': input_dict_return, 'outputs': output_dict_return, 'partials': partial_return}
+
+    def get_solver_model(self):
+
+        # return SolverBased group
+        component = VectorBasedGroup()
+        component.add_ODEProb(self)
+
+        return component

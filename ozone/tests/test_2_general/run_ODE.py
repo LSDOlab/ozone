@@ -114,7 +114,12 @@ def run_ode(settings_dict):
             # print(temp.shape)
 
             self.register_output('total', pox[-1]+poz[-1]+foy[0]+temp/2.0)
-            self.register_output('total2', csdl.pnorm(poy[-1,:,:] + poy[0,:,:]))
+            self.register_output('total2', csdl.pnorm(poy[-1, :, :] + poy[0, :, :]))
+
+            if approach_test == 'collocation':
+                dummy_input = self.create_input('dummy_input')
+                self.register_output('dummy_out', dummy_input*1.0)
+                self.add_objective('dummy_out')
 
     # Simulator Object:
     nt = settings_dict['numtimes']
@@ -131,10 +136,23 @@ def run_ode(settings_dict):
     sim = python_csdl_backend.Simulator(RunModel(num_timesteps=nt), mode='rev')
     sim.run()
 
+    if approach_test == 'collocation':
+        from modopt.scipy_library import SLSQP
+        from modopt.csdl_library import CSDLProblem
+        prob = CSDLProblem(
+            problem_name='test_2',
+            simulator=sim,
+        )
+
+        optimizer = SLSQP(prob)
+
+        # Solve your optimization problem
+        optimizer.solve()
+
     val = sim['total']
     print('total: ', val)
 
-    derivative_checks = sim.compute_totals(of=['total','total2'], wrt=['a', 'x_0', 'h', 'z_0', 'e'])
+    derivative_checks = sim.compute_totals(of=['total', 'total2'], wrt=['a', 'x_0', 'h', 'z_0', 'e'])
     # sim.check_totals(of=['total','total2'], wrt=['a', 'x_0', 'h', 'z_0', 'e'])
     # exit()
     for key in derivative_checks:

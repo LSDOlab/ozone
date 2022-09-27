@@ -62,17 +62,31 @@ def run_ode(settings_dict):
 
             self.register_output('y_out', csdl.sum(y_out))
 
+            if approach_test == 'collocation':
+                dummy_input = self.create_input('dummy_input')
+                self.register_output('dummy_out', dummy_input*1.0)
+                self.add_objective('dummy_out')
+
     # Simulator Object:
     nt = settings_dict['numtimes']
 
-    rep = csdl.GraphRepresentation(RunModel(num_timesteps=nt))
+    model = RunModel(num_timesteps=nt)
+    rep = csdl.GraphRepresentation(model)
     sim = python_csdl_backend.Simulator(rep, mode='rev')
     sim.run()
 
-    # sim.check_totals(of=['y_out'], wrt=['y_0', 'h'], compact_print=True)
-    # print(sim.system_graph.promoted_to_unique)
-    # print(sim.system_graph.unpromoted_to_unique)
-    # exit()
+    if approach_test == 'collocation':
+        from modopt.scipy_library import SLSQP
+        from modopt.csdl_library import CSDLProblem
+        prob = CSDLProblem(
+            problem_name='test_1',
+            simulator=sim,
+        )
+
+        optimizer = SLSQP(prob)
+
+        # Solve your optimization problem
+        optimizer.solve()
 
     val = sim['y_out']
     print('y_out: ', val)

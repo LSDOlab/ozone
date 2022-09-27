@@ -1,6 +1,4 @@
 from ozone.classes.glm_matrices.GLMs import get_integration_method
-from ozone.classes.ODEModelTM import ODEModelTM
-from ozone.classes.integrators.SolverBased.MainGroup import SolverBasedGroup
 import matplotlib.pyplot as plt
 import numpy as np
 import openmdao.api as om
@@ -236,22 +234,15 @@ class IntegratorBase(object):
         if self.profile_outputs_bool == True:
             self.profile_outputs_system.create(self.numnodes_p, 'P', parameters=profile_parameters)
 
-        # Creating explicit component for optimization loop
-        if self.approach == 'solver-based':
-            # If approach = solver-based, return a group
-            component = SolverBasedGroup()
-            component.add_ODEProb(self)
-
-            # import python_csdl_backend
-            # sim = python_csdl_backend.Simulator(component)
-            # sim.visualize_implementation()
-        else:
-            # If approach = explicit component, return a group
-            component = ODEModelTM()
-            component.add_ODEProb(self)
-
         # Returns integrator system
-        return component
+        return self.get_solver_model()
+
+    def get_solver_model(self):
+        """
+        method gets overwritten by proper solver.
+        """
+        raise NotImplementedError('get_solver_model not implemented')
+
 
     def check_partials(self, sys):
         """

@@ -1,55 +1,56 @@
-from ozone.tests.test_1_simple.run_ODE import run_ode
-from ozone.tests.test_1_simple.utils_test import check_derivs, check_output, get_settings_dict
+from ozone.tests.test_2_general.run_ODE import run_ode
+from ozone.tests.test_2_general.utils_test import check_derivs, check_output, get_settings_dict
 
 import pytest
 
 # ================================= NS non-sparse =================================
 
 
-def test_NS_solverbased_explicit():
+def test_NS_collocation_explicit():
     settings_dictionary = get_settings_dict()
-    settings_dictionary['approach'] = 'solver-based'
+    settings_dictionary['approach'] = 'collocation'
     settings_dictionary['system'] = 'NSstd'
     settings_dictionary['num_method'] = 'RK4'
     checks = run_ode(settings_dictionary)
 
     check_output(checks['output'][0])
-    check_derivs(checks['derivative_checks'])
+    # check_derivs(checks['derivative_checks'])
 
 
 # ================================= CSDL =================================
 
 
-def test_CSDL_solverbased_explicit():
+def test_CSDL_collocation_explicit():
     settings_dictionary = get_settings_dict()
-    settings_dictionary['approach'] = 'solver-based'
+    settings_dictionary['approach'] = 'collocation'
     settings_dictionary['system'] = 'CSDL'
     settings_dictionary['num_method'] = 'RK4'
     checks = run_ode(settings_dictionary)
     check_output(checks['output'][0])
-    check_derivs(checks['derivative_checks'])
+    # check_derivs(checks['derivative_checks'])
 
-def test_CSDL_solverbased_implicit():
+
+def test_CSDL_collocation_implicit():
     settings_dictionary = get_settings_dict()
-    settings_dictionary['approach'] = 'solver-based'
+    settings_dictionary['approach'] = 'collocation'
     settings_dictionary['system'] = 'CSDL'
     settings_dictionary['num_method'] = 'ImplicitMidpoint'
     checks = run_ode(settings_dictionary)
     check_output(checks['output'][0])
-    check_derivs(checks['derivative_checks'])
+    # check_derivs(checks['derivative_checks'])
 
 # ================================= Functions =================================
 
 
 if __name__ == '__main__':
     print('--------------------------------------------------EXPLICIT--------------------------------------------------')
-    test_NS_solverbased_explicit()
+    test_NS_collocation_explicit()
     # total:  [1.04318295]
     # derivative norm: ('total', 'a') 0.0038016174938430344
     # derivative norm: ('total', 'x_0') 1.0181788066850965
     # derivative norm: ('total', 'h') 19.462752682477294
 
-    test_CSDL_solverbased_explicit()
+    test_CSDL_collocation_explicit()
     # total:  [1.04318295]
     # derivative norm: ('total', 'a') 0.0038016174938430344
     # derivative norm: ('total', 'x_0') 1.0181788066850965

@@ -1,12 +1,13 @@
-import csdl_lite
+import python_csdl_backend
 from ozone.api import ODEProblem
 import csdl
 import python_csdl_backend
 import numpy as np
 
-
 # STEP 1: ODE Model
 # CSDL Model defining dydt = -y
+
+
 class ODESystemModel(csdl.Model):
     def initialize(self):
         # Required every time for ODE systems or Profile Output systems
@@ -65,15 +66,9 @@ class RunModel(csdl.Model):
 
 
 # Simulator object:
-sim = csdl_lite.Simulator(RunModel(num_times=31), mode='rev')
+sim = python_csdl_backend.Simulator(RunModel(num_times=31), mode='rev')
 
 # Run and check derivatives
 sim.run()
-# sim.visualize_implementation()
 print('y f:', sim['f'])
-# tots = sim.compute_totals(of=['f'], wrt='y_0')
-# for key in tots:
-#     print(tots[key])
-sim.check_partials()
-exit()
-sim.prob.check_totals(of=['f'], wrt=['y_0'], compact_print=True)
+sim.check_totals(of='f', wrt=['y_0', 'h'])

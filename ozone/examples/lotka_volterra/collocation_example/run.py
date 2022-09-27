@@ -1,7 +1,9 @@
 
+from modopt.csdl_library import CSDLProblem
+from modopt.scipy_library import SLSQP
 import matplotlib.pyplot as plt
 import openmdao.api as om
-from ode_systems import ODESystemModel, ProfileModel
+from ode_systems import ODESystemNative, ODESystemModel
 from ozone.api import ODEProblem, NativeSystem
 import csdl
 import python_csdl_backend
@@ -20,11 +22,8 @@ the same ODE Model as the 'coupled_ODE' example. However, the four coefficients 
 class ODEProblemTest(ODEProblem):
     def setup(self):
         # Define field outputs, profile outputs, states, parameters, times
-
-        # profile outputs are outputs from the ode integrator that are not states.
-        # instead they are outputs of a function of the solved states and parameters
-        self.add_profile_output('profile_output1')
-        self.add_profile_output('profile_output2')
+        # Outputs. coefficients for field outputs must be defined as an upstream variable
+        self.add_field_output('field_output', state_name='x', coefficients_name='coefficients')
 
         # If dynamic == True, The parameter must have shape = (self.num_times, ... shape of parameter @ every timestep ...)
         # The ODE function will use the parameter value at timestep 't': parameter@ODEfunction[shape_p] = fullparameter[t, shape_p]
@@ -36,13 +35,13 @@ class ODEProblemTest(ODEProblem):
         self.add_parameter('d')
 
         # Inputs names correspond to respective upstream CSDL variables
-        self.add_state('y', 'dy_dt', initial_condition_name='y_0', output='solved_y')
-        self.add_state('x', 'dx_dt', initial_condition_name='x_0', output='solved_x')
+        self.add_state('y', 'dy_dt', initial_condition_name='y_0')
+        self.add_state('x', 'dx_dt', initial_condition_name='x_0', output='x_solved')
         self.add_times(step_vector='h')
 
         # Define ODE and Profile Output systems (Either CSDL Model or Native System)
         self.set_ode_system(ODESystemModel)
-        self.set_profile_system(ProfileModel)
+        # self.set_ode_system(ODESystemNative)
 
 # The CSDL Model containing the ODE integrator
 
@@ -84,33 +83,42 @@ class RunModel(csdl.Model):
         h = self.create_input('h', h_vec)
 
         # Create Model containing integrator
-        ODEProblem = ODEProblemTest('RK4', 'time-marching', num_times, display='default', visualization='None')
-        # ODEProblem = ODEProblemTest('RK4', 'solver-based', num_times, display='default', visualization='None')
+        ODEProblem = ODEProblemTest('RK4', 'collocation', num_times, display='default', visualization='None')
+        # ODEProblem = ODEProblemTest('RK4', 'time-marching', num_times, display='default', visualization='None')
 
         self.add(ODEProblem.create_solver_model(), 'subgroup')
 
-        po1 = self.declare_variable('profile_output1', shape=(num_times, 1))
-        po2 = self.declare_variable('profile_output2', shape=(num_times, 1))
-        self.register_output('po1', po1*1.0)
-        self.register_output('po2', po2*1.0)
+        fo = self.declare_variable('field_output')
+        self.register_output('fo', fo*1.0)
+
+        x_integrated = self.declare_variable('x_solved', shape=(num_times, 1))
+        self.register_output('x_integrated', x_integrated*1.0)
+
+        # When using the collocation method, the ODE is solved using an optimization problem
+        # where the constraints define the integration.
+        # Therefore, an objective is needed. A dummy objective is used for this example
+        # but a different objective can be specified.
+        dummy_input = self.create_input('dummy_input')
+        self.register_output('dummy_objective', dummy_input*1.0)
+        self.add_objective('dummy_objective')
 
 
 # Simulator Object:
 # sim = python_csdl_backend.Simulator(RunModel(num_times=100), mode='rev')
-sim = python_csdl_backend.Simulator(RunModel(num_times=30), mode='rev', analytics=1)
+sim = python_csdl_backend.Simulator(RunModel(num_times=10), mode='rev')
 
 sim.run()
-po1 = sim['po1']
-po2 = sim['po2']
-a = sim['a']
-b = sim['b']
-g = sim['g']
-d = sim['d']
+prob = CSDLProblem(
+    problem_name='collocation_example',
+    simulator=sim,
+)
 
-y = sim['solved_y']  # [2.         1.95054869 1.77390347]
-x = sim['solved_x']  # [2.         2.84776338 4.01479881]
-print(po1)
-print(po2)
+optimizer = SLSQP(prob)
 
-# sim.visualize_implementation()
-sim.check_totals(of=['po1', 'po2', 'solved_y'], wrt=['y_0', 'x_0', 'h', 'a', 'b', 'g', 'd'], compact_print=True)
+# Solve your optimization problem
+optimizer.solve()
+
+# Visualize
+plt.plot(sim['x_solved'])
+plt.grid()
+plt.show()

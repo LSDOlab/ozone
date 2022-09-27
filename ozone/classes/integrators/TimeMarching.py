@@ -9,7 +9,7 @@ import scipy.sparse.linalg as spln
 import scipy.linalg as ln
 import numpy as np
 import matplotlib.pyplot as plt
-
+from ozone.classes.ODEModelTM import ODEModelTM
 
 class TimeMarching(IntegratorBase):
     """
@@ -1914,3 +1914,11 @@ class TimeMarching(IntegratorBase):
             sw = self.state_dict[s_wrt]
             # Create the actual vector
             sw['psi_tA'] = np.concatenate(tuple(sw['psi_A_temp']))
+
+    def get_solver_model(self):
+        # Creating explicit component for optimization loop
+        # If approach = explicit component, return a group
+        component = ODEModelTM()
+        component.add_ODEProb(self)
+
+        return component

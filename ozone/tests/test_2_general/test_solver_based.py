@@ -29,6 +29,14 @@ def test_CSDL_solverbased_explicit():
     check_output(checks['output'][0])
     check_derivs(checks['derivative_checks'])
 
+def test_CSDL_solverbased_implicit():
+    settings_dictionary = get_settings_dict()
+    settings_dictionary['approach'] = 'solver-based'
+    settings_dictionary['system'] = 'CSDL'
+    settings_dictionary['num_method'] = 'ImplicitMidpoint'
+    checks = run_ode(settings_dictionary)
+    check_output(checks['output'][0])
+    check_derivs(checks['derivative_checks'])
 
 # ================================= Functions =================================
 
