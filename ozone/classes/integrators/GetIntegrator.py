@@ -1,7 +1,7 @@
 from ozone.classes.integrators.TimeMarching import TimeMarching
 from ozone.classes.integrators.TimeMarchingWithCheckpointing import TimeMarchingWithCheckpointing
-from ozone.classes.integrators.vectorized.solver_based_integrator import SolverBased
-from ozone.classes.integrators.vectorized.collocation_integrator import Collocation
+from ozone.classes.integrators.solver_based_integrator import SolverBased
+from ozone.classes.integrators.collocation_integrator import Collocation
 
 
 def get_integrator(approach):
