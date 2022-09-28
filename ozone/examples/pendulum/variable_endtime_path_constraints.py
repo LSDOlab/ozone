@@ -5,7 +5,6 @@ import csdl_om
 import python_csdl_backend
 import numpy as np
 import modopt
-from pendulum_dashboard import SampleDash
 from modopt.snopt_library import SNOPT
 from modopt.scipy_library import SLSQP
 from modopt.csdl_library import CSDLProblem
@@ -93,8 +92,8 @@ class ODEFunction(csdl.Model):
 
 # run the optimization problem
 sim = python_csdl_backend.Simulator(IntegratorModel(), mode='rev')
-dash = SampleDash()
-sim.add_recorder(dash.get_recorder())
+# dash = SampleDash()
+# sim.add_recorder(dash.get_recorder())
 
 # sim.run()
 # sim.check_totals()
@@ -135,4 +134,3 @@ plt.title('Integrated ODE states after optimization')
 plt.legend(['theta', 'theta dot'])
 plt.grid()
 plt.show()
-
