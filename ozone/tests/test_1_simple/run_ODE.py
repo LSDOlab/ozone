@@ -79,7 +79,7 @@ def run_ode(settings_dict):
         from modopt.scipy_library import SLSQP
         from modopt.csdl_library import CSDLProblem
         prob = CSDLProblem(
-            problem_name='test_1',
+            problem_name='test_3',
             simulator=sim,
         )
 
