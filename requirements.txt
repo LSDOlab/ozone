@@ -1,12 +1,12 @@
 -e git+https://github.com/LSDOlab/csdl.git@master#egg=csdl
--e git+https://github.com/LSDOlab/csdl_om.git@bdc1c8d3539dbdd3f934562ddee30e4361447adc#egg=csdl_om
+-e git+https://github.com/LSDOlab/csdl_om.git@master#egg=csdl_om
 Deprecated==1.2.13
 gprof2dot==2021.2.21
 guppy3==3.1.0
--e git+https://github.com/lsdolab/modopt.git@aaabede8c44e59ce886ca35e69d9a973c22c69e4#egg=modopt
+-e git+https://github.com/lsdolab/modopt.git@master#egg=modopt
 numpy==1.23.1
 openmdao==3.10.0
 pytest==7.1.2
--e git+https://github.com/LSDOlab/python_csdl_backend.git@01ca2d6e45ae7c09d1b3ba4d02a16645ad02f786#egg=python_csdl_backend
+-e git+https://github.com/LSDOlab/python_csdl_backend.git@master#egg=python_csdl_backend
 python-utils==2.5.6
 scipy==1.8.1
