@@ -1,4 +1,4 @@
--e git+https://github.com/LSDOlab/csdl.git@3e77b60fc44ff4f6a8022f323902059a868d4e27#egg=csdl
+-e git+https://github.com/LSDOlab/csdl.git@master#egg=csdl
 -e git+https://github.com/LSDOlab/csdl_om.git@bdc1c8d3539dbdd3f934562ddee30e4361447adc#egg=csdl_om
 Deprecated==1.2.13
 gprof2dot==2021.2.21
