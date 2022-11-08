@@ -563,9 +563,10 @@ class TimeMarching(IntegratorBase):
             for key in self.state_dict:
                 for i in range(self.state_dict[key]['num']):
                     plt.plot(time_vector[0:time_now_index+1],
-                             self.state_dict[key]['y_storage'][i, 0:time_now_index+1])
+                             self.state_dict[key]['y_storage'][i, 0:time_now_index+1], label = key)
             plt.xlabel('Time')
             plt.ylabel('states')
+            plt.legend()
             plt.grid(True)
             plt.draw()
             plt.pause(0.00001)

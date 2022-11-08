@@ -8,6 +8,8 @@ import modopt
 from modopt.snopt_library import SNOPT
 from modopt.scipy_library import SLSQP
 from modopt.csdl_library import CSDLProblem
+import time
+# from pendulum_dashboard import SampleDash
 
 # create a csdl model that tries to minimize the amount of time it takes to make a hanging pendulum go to rest
 # by controlling the input torque. Equations are taken from example three in https://math.berkeley.edu/~evans/control.course.pdf
@@ -17,7 +19,7 @@ from modopt.csdl_library import CSDLProblem
 class IntegratorModel(csdl.Model):
 
     def define(self):
-        num_timepoints = 100  # number of time points for integration (includes initial condition)
+        num_timepoints = 50  # number of time points for integration (includes initial condition)
 
         # set initial conditions
         self.create_input('initial_theta', val=2.0)
@@ -117,12 +119,17 @@ prob = CSDLProblem(
     problem_name='pendulum',
     simulator=sim,)
 
-optimizer = SLSQP(prob)
+# optimizer = SLSQP(prob)
+optimizer = SNOPT(prob, Major_iterations = 500)
+optimization_start = time.time()
 optimizer.solve()
+optimization_end = time.time()
+print('OPT TIME:', optimization_end - optimization_start)
+# exit()
 optimizer.print_results()
 
 
-# Initial run and plot
+# Final run and plot
 sim.run()
 time_point_vector = np.cumsum(sim['timestep_vector'])
 time_point_vector = np.insert(time_point_vector, 0, 0.0)

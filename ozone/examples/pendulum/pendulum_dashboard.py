@@ -1,7 +1,6 @@
 import lsdo_dash.api as ld
 import numpy as np
 
-
 class SampleDash(ld.BaseDash):
 
     def set_config(self):

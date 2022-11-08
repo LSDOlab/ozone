@@ -82,6 +82,11 @@ class VectorBased(IntegratorBase):
                 self.state_dict[key]['output_shape'] = (
                     self.num_steps+1,) + self.state_dict[key]['shape']
 
+            self.state_dict[key]['nn_guess'] = np.linspace(
+                self.state_dict[key]['guess'][0], 
+                self.state_dict[key]['guess'][1], 
+                num = np.prod(self.state_dict[key]['nn_shape'])).reshape(self.state_dict[key]['nn_shape'])
+
         # Parameter Meta Names and shapes
         for key in self.parameter_dict:
             self.parameter_dict[key]['proxy_name'] = 'proxy_'+key

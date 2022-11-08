@@ -18,6 +18,11 @@ class NativeSystem(object):
 
         self.complex_wrt_dict = {}
 
+        self.num_f_calls = 0
+        self.num_vectorized_f_calls = 0
+        self.num_df_calls = 0
+        self.num_vectorized_df_calls = 0
+
     def create(self, num_in, type, parameters=None):
         self.num_nodes = num_in
 
@@ -51,6 +56,8 @@ class NativeSystem(object):
                     self.partial_properties[outs][ins]['type'] = 'std'
 
     def run_model(self, input_dict, output_vals):
+        self.num_vectorized_f_calls += 1
+        self.num_f_calls += self.num_nodes
         # Runs model. Can also set variables if needed
         for key in input_dict:
             self.input_vals[key] = input_dict[key]
@@ -65,6 +72,10 @@ class NativeSystem(object):
         return return_outputs
 
     def compute_total_derivatives(self, in_of, in_wrt, approach='TM'):
+
+        self.num_vectorized_df_calls += 1
+        self.num_df_calls += self.num_nodes
+
         partials = self.partial_vals
         partial_properties = self.partial_properties
         inputs = self.input_vals

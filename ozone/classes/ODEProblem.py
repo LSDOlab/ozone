@@ -170,7 +170,14 @@ class ODEProblem(object):
         else:
             raise ValueError('step_vector has not been set.')
 
-    def add_state(self, state_name, f_name, shape=1, initial_condition_name=None, fixed_input=False, output=None):
+    def add_state(self,
+                  state_name,
+                  f_name,
+                  shape=1,
+                  initial_condition_name=None,
+                  fixed_input=False,
+                  output=None,
+                  interp_guess=[1.0, 1.0]):
         """
         define state
 
@@ -188,12 +195,19 @@ class ODEProblem(object):
                 If True, the parameter input varies at every timestep. Shape must be (self.num_steps, parameter shape at every timestep)
             fixed_input: bool
                 If true, the initial condition is fixed_input. ie. derivatives wrt initial conditions are manually set to zero and not computed. This saves computation time.
+            output: str
+                If solved state is desired as an output to the integrator, specify name of output. Declare this variable name to access in csdl.
+            interp_guess: np.array, float
+                If solution approach is 'collocation', set an initial guess. Default is 1.0.
         """
         # error:
         if initial_condition_name is None:
             raise ValueError(f'initial condition for {state_name} has not been set.')
         if not isinstance(shape, (type((1, 2)), type(10))):
             raise ValueError(f'state shape must integer or tuple')
+        if not isinstance(interp_guess, list):
+            # TODO: add more options.
+            raise ValueError('interp_guess must be a list with two elements')
 
         # Dictionary of state properties
         temp_dict = {
@@ -203,7 +217,8 @@ class ODEProblem(object):
             'f_name': f_name,
             'f_val': None,
             'val': None,
-            'fixed_input': fixed_input}
+            'fixed_input': fixed_input,
+            'guess': interp_guess}
         self.integrator.state_dict[state_name] = temp_dict
         self.integrator.f2s_dict[f_name] = state_name
         temp_dict = {
@@ -322,7 +337,7 @@ class ODEProblem(object):
         """
         self.integrator.recorder = recorder
 
-    def set_ode_system(self, ode_system, backend = 'python_csdl_backend'):
+    def set_ode_system(self, ode_system, backend='python_csdl_backend'):
         """
         Declare the ODE system. This method MUST be called in the setup method.
 
@@ -340,7 +355,7 @@ class ODEProblem(object):
         else:
             raise TypeError('must be an uninstantiated CSDL Model or uninstantiated NativeSystem')
 
-    def set_profile_system(self, profile_system, backend = 'python_csdl_backend'):
+    def set_profile_system(self, profile_system, backend='python_csdl_backend'):
         """
         Declare the Profile Output system. This method MUST be called in the setup method IF profile outputs are declared.
 

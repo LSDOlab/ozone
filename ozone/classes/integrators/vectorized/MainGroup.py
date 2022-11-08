@@ -347,7 +347,11 @@ class VectorBasedGroup(csdl.Model):
                 flat_shape = np.prod(nn_shape)
 
                 res_var = rm.declare_variable('res_'+state_stage, shape=flat_shape)
-                constraint = rm.register_output('constraint_'+state_stage, csdl.pnorm(res_var))
+                #  OLD
+                # constraint = rm.register_output('constraint_'+state_stage, csdl.pnorm(res_var))
+
+                # NEW
+                constraint = rm.register_output('constraint_'+state_stage, 1.0*res_var)
                 rm.add_constraint(name='constraint_'+state_stage, equals=0.0)
 
             # add model that computes residual model
@@ -357,7 +361,9 @@ class VectorBasedGroup(csdl.Model):
             stage_tuple = []
             for stage in self.integrator.stage_dict:
                 state_name = self.integrator.stage_dict[stage]['state_name']
-                stage_tuple.append(self.create_input(stage,  shape=self.integrator.state_dict[state_name]['nn_shape']))
+                stage_tuple.append(self.create_input(stage,
+                                                     shape=self.integrator.state_dict[state_name]['nn_shape'],
+                                                     val=self.integrator.state_dict[state_name]['nn_guess']))
                 self.add_design_variable(stage)
 
             # Get state outputs as declared variables

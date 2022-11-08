@@ -9,8 +9,14 @@ class Wrap(object):
         if self.backend not in ['csdl_om',  'python_csdl_backend']:
             raise ValueError(f'backend must be \'csdl_om\' or \'python_csdl_backend\'')
 
+        self.num_f_calls = 0
+        self.num_vectorized_f_calls = 0
+        self.num_df_calls = 0
+        self.num_vectorized_df_calls = 0
+
     def create(self, num_param, type, parameters=None):
         # Creates Problem Object
+        self.num_nodes = num_param
 
         if self.backend == 'csdl_om':
             import csdl_om
@@ -32,6 +38,8 @@ class Wrap(object):
 
     def run_model(self, input_dict, output_vals):
         # Runs model. Can also set variables if needed
+        self.num_vectorized_f_calls += 1
+        self.num_f_calls += self.num_nodes
 
         for key, value in input_dict.items():
             self.problem[key] = value
@@ -47,6 +55,9 @@ class Wrap(object):
         return outputs
 
     def compute_total_derivatives(self, in_of, in_wrt, approach='TM'):
+
+        self.num_df_calls += 1
+        self.num_vectorized_df_calls = self.num_nodes
         # Computes Derivatives
         if approach == 'TM':
             return self.problem.compute_totals(of=in_of, wrt=in_wrt, return_format='dict')
