@@ -34,14 +34,11 @@ def test_CSDL_timemarching_explicit():
 
 if __name__ == '__main__':
     print('--------------------------------------------------EXPLICIT--------------------------------------------------')
-    test_NS_timemarching_explicit()
+    # test_NS_timemarching_explicit()
     # total:  [1.04318295]
     # derivative norm: ('total', 'a') 0.0038016174938430344
     # derivative norm: ('total', 'x_0') 1.0181788066850965
     # derivative norm: ('total', 'h') 19.462752682477294
 
     test_CSDL_timemarching_explicit()
-    # total:  [1.04318295]
-    # derivative norm: ('total', 'a') 0.0038016174938430344
-    # derivative norm: ('total', 'x_0') 1.0181788066850965
-    # derivative norm: ('total', 'h') 19.462752682477294
+   

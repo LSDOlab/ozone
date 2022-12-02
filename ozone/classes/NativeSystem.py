@@ -23,6 +23,8 @@ class NativeSystem(object):
         self.num_df_calls = 0
         self.num_vectorized_df_calls = 0
 
+        self.recorder = None
+
     def create(self, num_in, type, parameters=None):
         self.num_nodes = num_in
 
@@ -58,6 +60,10 @@ class NativeSystem(object):
     def run_model(self, input_dict, output_vals):
         self.num_vectorized_f_calls += 1
         self.num_f_calls += self.num_nodes
+        if self.recorder:
+            save_dict = self.get_recorder_data(self.recorder.dash_instance.vars['ozone']['var_names'])
+            self.recorder.record(save_dict, 'ozone')
+
         # Runs model. Can also set variables if needed
         for key in input_dict:
             self.input_vals[key] = input_dict[key]
@@ -75,6 +81,9 @@ class NativeSystem(object):
 
         self.num_vectorized_df_calls += 1
         self.num_df_calls += self.num_nodes
+        if self.recorder:
+            save_dict = self.get_recorder_data(self.recorder.dash_instance.vars['ozone']['var_names'])
+            self.recorder.record(save_dict, 'ozone')
 
         partials = self.partial_vals
         partial_properties = self.partial_properties
@@ -351,3 +360,18 @@ class NativeSystem(object):
 
     def setup(self):
         pass
+
+    def get_recorder_data(self, var_names):
+        save_dict = {}
+        for var_name in var_names:
+            if var_name == 'number f calls':
+                save_dict[var_name] = self.num_f_calls
+            elif var_name == 'number vectorized f calls':
+                save_dict[var_name] = self.num_vectorized_f_calls
+            elif var_name == 'number df calls':
+                save_dict[var_name] = self.num_df_calls
+            elif var_name == 'number vectorized df calls':
+                save_dict[var_name] = self.num_vectorized_df_calls
+            else:
+                raise KeyError(f'could not find variable {var_name} to save in ozone client')
+        return save_dict

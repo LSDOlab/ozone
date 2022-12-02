@@ -77,13 +77,21 @@ class StateComp(csdl.CustomExplicitOperation):
                 state_flattened = outputs[sd['meta_name']].reshape(
                     (self.num_steps+1, sd['num']))
                 time_vector_plot = np.arange(0, self.num_steps+1)
+                time_vector_plot = np.zeros(time_vector_plot.shape)
+
+                t_vec_state = []
+                for i in range(t_vec.shape[0]):
+                    if i % self.num_stages == 0:
+                        t_vec_state.append(t_vec[i])
+                time_vector_plot[1:] = np.cumsum(t_vec_state)
                 for i in range(sd['num']):
-                    plt.plot(time_vector_plot, state_flattened)
+                    plt.plot(time_vector_plot, state_flattened, label=key)
                 plt.xlabel('Time')
                 plt.ylabel('states')
                 plt.grid(True)
 
         if self.visualization == 'end':
+            plt.legend()
             plt.draw()
             plt.pause(0.00001)
 

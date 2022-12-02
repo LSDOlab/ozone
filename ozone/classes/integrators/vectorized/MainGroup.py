@@ -119,7 +119,8 @@ class VectorBasedGroup(csdl.Model):
                 ODE_system=self.integrator.ode_system,
                 misc=misc,
                 define_dict=self.integrator.var_order_name['ODEComp'],
-                stage_f_dict=self.integrator.stage_f_dict)
+                stage_f_dict=self.integrator.stage_f_dict,
+                recorder = self.integrator.recorder)
             odecomp.set_odesys(self.integrator.ode_system)
 
             input_list_OC = []

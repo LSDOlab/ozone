@@ -209,7 +209,7 @@ class POSystem(csdl.Model):
 
         profile_output_z = csdl.reshape(z[:, 1, 1], (n,))
         profile_output_x = x + (y/4.0)*y
-        profile_output_y = z + e + csdl.expand(a, (n, 2, 2), 'i->ijk') + csdl.expand(d, (n, 2, 2))
+        profile_output_y = z + e**2 + csdl.expand(a, (n, 2, 2), 'i->ijk') + csdl.expand(d, (n, 2, 2))
 
         self.register_output('profile_output_x', profile_output_x)
         self.register_output('profile_output_y', profile_output_y)

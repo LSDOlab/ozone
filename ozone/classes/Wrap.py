@@ -14,6 +14,8 @@ class Wrap(object):
         self.num_df_calls = 0
         self.num_vectorized_df_calls = 0
 
+        self.recorder = None
+
     def create(self, num_param, type, parameters=None):
         # Creates Problem Object
         self.num_nodes = num_param
@@ -32,7 +34,7 @@ class Wrap(object):
             if parameters is None:
                 sim = python_csdl_backend.Simulator(self.system(num_nodes=num_param))
             else:
-                sim = python_csdl_backend.Simulator(self.system(num_nodes=num_param, **parameters))
+                sim = python_csdl_backend.Simulator(self.system(num_nodes=num_param, **parameters), display_scripts=1)
 
             self.problem = sim
 
@@ -40,6 +42,10 @@ class Wrap(object):
         # Runs model. Can also set variables if needed
         self.num_vectorized_f_calls += 1
         self.num_f_calls += self.num_nodes
+
+        if self.recorder:
+            save_dict = self.get_recorder_data(self.recorder.dash_instance.vars['ozone']['var_names'])
+            self.recorder.record(save_dict, 'ozone')
 
         for key, value in input_dict.items():
             self.problem[key] = value
@@ -56,8 +62,12 @@ class Wrap(object):
 
     def compute_total_derivatives(self, in_of, in_wrt, approach='TM'):
 
-        self.num_df_calls += 1
-        self.num_vectorized_df_calls = self.num_nodes
+        self.num_df_calls += self.num_nodes
+        self.num_vectorized_df_calls += 1
+        if self.recorder:
+            save_dict = self.get_recorder_data(self.recorder.dash_instance.vars['ozone']['var_names'])
+            self.recorder.record(save_dict, 'ozone')
+
         # Computes Derivatives
         if approach == 'TM':
             return self.problem.compute_totals(of=in_of, wrt=in_wrt, return_format='dict')
@@ -77,3 +87,18 @@ class Wrap(object):
         else:
             self.problem.run()
         self.problem.check_totals(of=in_of, wrt=in_wrt, compact_print=True)
+
+    def get_recorder_data(self, var_names):
+        save_dict = {}
+        for var_name in var_names:
+            if var_name == 'number f calls':
+                save_dict[var_name] = self.num_f_calls
+            elif var_name == 'number vectorized f calls':
+                save_dict[var_name] = self.num_vectorized_f_calls
+            elif var_name == 'number df calls':
+                save_dict[var_name] = self.num_df_calls
+            elif var_name == 'number vectorized df calls':
+                save_dict[var_name] = self.num_vectorized_df_calls
+            else:
+                raise KeyError(f'could not find variable {var_name} to save in ozone client')
+        return save_dict

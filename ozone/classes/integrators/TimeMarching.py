@@ -11,6 +11,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from ozone.classes.ODEModelTM import ODEModelTM
 
+
 class TimeMarching(IntegratorBase):
     """
     TimeMarching is a child class of the IntegratorBase class.
@@ -470,8 +471,8 @@ class TimeMarching(IntegratorBase):
             # -------------------------- MAIN INTEGRATION CALCULATIONS --------------------------:
 
             # Storage for JVP:
-            if self.recorder is not None:
-                writer_dict = {}
+            # if self.recorder is not None:
+            #     writer_dict = {}
 
             for key in self.state_dict:
                 sd = self.state_dict[key]
@@ -481,13 +482,13 @@ class TimeMarching(IntegratorBase):
                     self.state_dict[key]['y_storage'][:, t+1] = sd['y_current']
                 self.state_dict[key]['y_previous'] = sd['y_current']
 
-                if self.recorder is not None:
-                    writer_dict[key] = sd['y_current']
+            #     if self.recorder is not None:
+            #         writer_dict[key] = sd['y_current']
 
-            # print(self.recorder)
-            if self.recorder is not None:
-                # print(writer_dict)
-                self.recorder(writer_dict, 'ozone')
+            # # print(self.recorder)
+            # if self.recorder is not None:
+            #     # print(writer_dict)
+            #     self.recorder(writer_dict, 'ozone')
 
             # Profile/Field/State Outputs for current time step
             if store_outputs == True:
@@ -563,7 +564,7 @@ class TimeMarching(IntegratorBase):
             for key in self.state_dict:
                 for i in range(self.state_dict[key]['num']):
                     plt.plot(time_vector[0:time_now_index+1],
-                             self.state_dict[key]['y_storage'][i, 0:time_now_index+1], label = key)
+                             self.state_dict[key]['y_storage'][i, 0:time_now_index+1], label=key)
             plt.xlabel('Time')
             plt.ylabel('states')
             plt.legend()
@@ -609,8 +610,16 @@ class TimeMarching(IntegratorBase):
 
         # IMPLICIT METHOD:
         # Newton Iteration to compute stage
+        # print()
+        jac_dimensions = self.all_states_num*self.num_stages
+        if jac_dimensions > 150:
+            sparse_jac = True
+        else:
+            sparse_jac = False
+
         while error > self.error_tolerance:
-            start_stage = time.time()
+            # print('ERROR: ', error, '/',self.error_tolerance)
+            # start_stage = time.time()
 
             # RunModel and ComputingTotalDerivatives
             for key in self.state_dict:
@@ -622,101 +631,179 @@ class TimeMarching(IntegratorBase):
 
             self.trm += (time.time() - trm)
 
-            # Setting Stage Iteration:
+            # Newton's Iteration
             error_index = 0
+            full_concatenated_residual = np.zeros(jac_dimensions)
+            full_iter_matrix_list = []
             for key in self.state_dict:
-                start_stage = time.time()
                 sd = self.state_dict[key]
                 f_name = sd['f_name']
+                full_iter_matrix_cur_row = []  # Will be used to build current block row
 
-                # Setting F and dF/dY
+                # Compute residual
                 Y_iteration_eval = P[f_name].reshape(sd['shape_stage'])
-                Y_iteration_prime = Pd[f_name][key]
                 Y_iteration = sd['Y_iteration']
-
-                # Calculating Derivatives
                 Residual = Y_iteration - (sd['hAkron'])*(Y_iteration_eval) - sd['Uy']  # R
-                # Y_new = Y_old - R/(pR/pY)
 
-                # If Native System:
-                if self.OStype == 'NS':
-                    partialtype = self.ode_system.partial_properties[f_name][key]['type']
+                # Add to full residual vector
+                full_concatenated_residual[sd['stage_ind'][0]:sd['stage_ind'][1]] = -Residual
 
-                    if partialtype == 'empty':
-                        Y_nextiteration = Y_iteration - Residual
+                # Build Iteration matrix
+                for key_wrt in self.state_dict:
+                    swrt = self.state_dict[key_wrt]
+                    Y_iteration_prime = Pd[f_name][key_wrt]
+                    entry = -sd['hAkron'].dot(Y_iteration_prime)
+                    if key_wrt == key:
+                        entry = sd['full_eye'] + entry
+                    # print(key,swrt)
 
-                    # Depending on sparse or not, calculate Y_nextiteration differently
-                    if partialtype == 'row_col' or partialtype == 'row_col_val' or partialtype == 'sparse':
+                    if sparse_jac:
+                        full_iter_matrix_cur_row.append(sp.csc_matrix(entry))
+                    else:
+                        if not sp.issparse(entry):
+                            full_iter_matrix_cur_row.append((entry))
+                        else:
+                            full_iter_matrix_cur_row.append((entry.toarray()))
 
-                        if self.implicit_solver_fwd == 'direct':
-                            Y_nextiteration = Y_iteration + spln.gmres(sd['full_eye'] - sd['hAkron'] * Y_iteration_prime, (-Residual))[0]  # Ynew
+                full_iter_matrix_list.append(full_iter_matrix_cur_row)
 
-                        elif self.implicit_solver_fwd == 'iterative':
-                            sk_prev = np.ones(Residual.shape)
-                            fpi_error = 1.0
-                            fpi_iter = 0
-                            while fpi_error > self.error_tolerance:
-                                sk = sd['hAkron']*(Y_iteration_prime*sk_prev)-Residual
-                                fpi_error = np.linalg.norm(sk_prev-sk)
-                                fpi_iter += 1
-                                sk_prev = sk
-                                if fpi_iter > 10:
-                                    warnings.warn("iterative taking time to converge. An alternative is to use direct method: implicit_solver_fwd = 'direct'")
-                            Y_nextiteration = Y_iteration + sk
+            if sparse_jac:
+                # Full iteration matrix for Newton's Method
+                iter_matrix = sp.bmat(full_iter_matrix_list, format='csc')
 
-                    elif partialtype == 'std' or partialtype == 'cs_uc':
-                        Y_iteration_prime = Y_iteration_prime.reshape((sd['num_stage_state'], sd['num_stage_state']))
+                # solve for the steps
+                concatenated_steps = spln.spsolve(iter_matrix, full_concatenated_residual)
+                # print(iter_matrix.toarray())
+                # exit()
+            else:
+                # Full iteration matrix for Newton's Method
+                iter_matrix = np.block(full_iter_matrix_list)
 
-                        if self.implicit_solver_fwd == 'direct':
-                            temp = sd['full_eye'] - sd['hAkron'].dot(Y_iteration_prime)
-                            Y_nextiteration = Y_iteration + ln.solve(temp, (-Residual))
+                # solve for the steps
+                concatenated_steps = np.linalg.solve(iter_matrix, full_concatenated_residual)
+                # print(iter_matrix.toarray())
+                # exit()
 
-                        elif self.implicit_solver_fwd == 'iterative':
-                            sk_prev = np.ones(Residual.shape)
-                            fpi_error = 1.0
-                            fpi_iter = 0
-                            while fpi_error > self.error_tolerance:
-                                sk = sd['hAkron'].dot(Y_iteration_prime.dot(sk_prev))-Residual
-                                fpi_error = np.linalg.norm(sk_prev-sk)
-                                fpi_iter += 1
-                                sk_prev = sk
-                                if fpi_iter > 10:
-                                    warnings.warn("iterative taking time to converge. An alternative is to use direct method: implicit_solver_fwd = 'direct'")
-                            Y_nextiteration = Y_iteration + sk
+            error = 0.0
+            for i, key in enumerate(self.state_dict):
+                sd = self.state_dict[key]
 
-                elif self.OStype == 'OM':
-                    if self.implicit_solver_fwd == 'direct':
-                        temp = sd['full_eye'] - sd['hAkron'].dot(Y_iteration_prime)
-                        Y_nextiteration = Y_iteration + ln.solve(temp, (-Residual))
+                # Next step
+                sk = concatenated_steps[sd['stage_ind'][0]:sd['stage_ind'][1]]
 
-                    elif self.implicit_solver_fwd == 'iterative':
-                        sk_prev = np.ones(Residual.shape)
-                        fpi_error = 1.0
-                        fpi_iter = 0
-                        while fpi_error > self.error_tolerance:
-                            sk = sd['hAkron'].dot(Y_iteration_prime.dot(sk_prev))-Residual
-                            fpi_error = np.linalg.norm(sk_prev-sk)
-                            sk_prev = sk
-                            fpi_iter += 1
-                            if fpi_iter > 10:
-                                warnings.warn("iterative taking time to converge. An alternative is to use direct method: implicit_solver_fwd = 'direct'")
-                        Y_nextiteration = Y_iteration + sk
-                # Error
-                self.stage_error_list[error_index] = np.linalg.norm(
-                    Y_iteration-Y_nextiteration)
-                error_index += 1
-                self.state_dict[key]['Y_iteration'] = Y_nextiteration
-                end_stage = time.time()
-                # print('Stage Newton Section Ratio:',(end_s - start_s)/(end_stage - start_stage))
-                # print('Stage Newton Section Time:', (end_s - start_s))
-                # print(iteration_num, 'SNS Res:', (-Residual))
+                # Next iteration
+                Ynextiteration = sd['Y_iteration'] + sk
+                # print(sk)
 
-            error = self.stage_error_list.max()
-            # print(iteration_num, self.stage_error_list)
-            # print('newtons error:', error)
-            # print('iteration_num',iteration_num, 'NEWTON ITR ERROR:', error)
+                # max error
+                current_error = np.linalg.norm(sk)
+                if current_error > error:
+                    error = current_error
+
+                # Next iteration
+                sd['Y_iteration'] = Ynextiteration
             iteration_num += 1
-            end_stage = time.time()
+
+            if iteration_num >= 100:
+                print(f'Newtons Method did not converge to {self.error_tolerance} in 100 iterations. Current error is {error}.')
+                break
+            # exit()
+
+            # # Setting Stage Iteration:
+            # error_index = 0
+            # for key in self.state_dict:
+            #     start_stage = time.time()
+            #     sd = self.state_dict[key]
+            #     f_name = sd['f_name']
+
+            #     # Setting F and dF/dY
+            #     Y_iteration_eval = P[f_name].reshape(sd['shape_stage'])
+            #     Y_iteration_prime = Pd[f_name][key]
+            #     Y_iteration = sd['Y_iteration']
+
+            #     # Calculating Derivatives
+            #     Residual = Y_iteration - (sd['hAkron'])*(Y_iteration_eval) - sd['Uy']  # R
+            #     # Y_new = Y_old - R/(pR/pY)
+
+            #     # If Native System:
+            #     if self.OStype == 'NS':
+            #         partialtype = self.ode_system.partial_properties[f_name][key]['type']
+
+            #         if partialtype == 'empty':
+            #             Y_nextiteration = Y_iteration - Residual
+
+            #         # Depending on sparse or not, calculate Y_nextiteration differently
+            #         if partialtype == 'row_col' or partialtype == 'row_col_val' or partialtype == 'sparse':
+
+            #             if self.implicit_solver_fwd == 'direct':
+            #                 Y_nextiteration = Y_iteration + spln.gmres(sd['full_eye'] - sd['hAkron'] * Y_iteration_prime, (-Residual))[0]  # Ynew
+
+            #             elif self.implicit_solver_fwd == 'iterative':
+            #                 sk_prev = np.ones(Residual.shape)
+            #                 fpi_error = 1.0
+            #                 fpi_iter = 0
+            #                 while fpi_error > self.error_tolerance:
+            #                     sk = sd['hAkron']*(Y_iteration_prime*sk_prev)-Residual
+            #                     fpi_error = np.linalg.norm(sk_prev-sk)
+            #                     fpi_iter += 1
+            #                     sk_prev = sk
+            #                     if fpi_iter > 10:
+            #                         warnings.warn("iterative taking time to converge. An alternative is to use direct method: implicit_solver_fwd = 'direct'")
+            #                 Y_nextiteration = Y_iteration + sk
+
+            #         elif partialtype == 'std' or partialtype == 'cs_uc':
+            #             Y_iteration_prime = Y_iteration_prime.reshape((sd['num_stage_state'], sd['num_stage_state']))
+
+            #             if self.implicit_solver_fwd == 'direct':
+            #                 temp = sd['full_eye'] - sd['hAkron'].dot(Y_iteration_prime)
+            #                 Y_nextiteration = Y_iteration + ln.solve(temp, (-Residual))
+
+            #             elif self.implicit_solver_fwd == 'iterative':
+            #                 sk_prev = np.ones(Residual.shape)
+            #                 fpi_error = 1.0
+            #                 fpi_iter = 0
+            #                 while fpi_error > self.error_tolerance:
+            #                     sk = sd['hAkron'].dot(Y_iteration_prime.dot(sk_prev))-Residual
+            #                     fpi_error = np.linalg.norm(sk_prev-sk)
+            #                     fpi_iter += 1
+            #                     sk_prev = sk
+            #                     if fpi_iter > 10:
+            #                         warnings.warn("iterative taking time to converge. An alternative is to use direct method: implicit_solver_fwd = 'direct'")
+            #                 Y_nextiteration = Y_iteration + sk
+
+            #     elif self.OStype == 'OM':
+            #         if self.implicit_solver_fwd == 'direct':
+            #             temp = sd['full_eye'] - sd['hAkron'].dot(Y_iteration_prime)
+            #             Y_nextiteration = Y_iteration + ln.solve(temp, (-Residual))
+
+            #         elif self.implicit_solver_fwd == 'iterative':
+            #             sk_prev = np.ones(Residual.shape)
+            #             fpi_error = 1.0
+            #             fpi_iter = 0
+            #             while fpi_error > self.error_tolerance:
+            #                 sk = sd['hAkron'].dot(Y_iteration_prime.dot(sk_prev))-Residual
+            #                 fpi_error = np.linalg.norm(sk_prev-sk)
+            #                 sk_prev = sk
+            #                 fpi_iter += 1
+            #                 if fpi_iter > 10:
+            #                     warnings.warn("iterative taking time to converge. An alternative is to use direct method: implicit_solver_fwd = 'direct'")
+            #             Y_nextiteration = Y_iteration + sk
+            #     # Error
+            #     self.stage_error_list[error_index] = np.linalg.norm(
+            #         Y_iteration-Y_nextiteration)
+            #     error_index += 1
+            #     self.state_dict[key]['Y_iteration'] = Y_nextiteration
+            #     end_stage = time.time()
+            #     # print('Stage Newton Section Ratio:',(end_s - start_s)/(end_stage - start_stage))
+            #     # print('Stage Newton Section Time:', (end_s - start_s))
+            #     # print(iteration_num, 'SNS Res:', (-Residual))
+
+            # error = self.stage_error_list.max()
+            # # print(iteration_num, self.stage_error_list)
+            # # print('newtons error:', error)
+            # # print('iteration_num',iteration_num, 'NEWTON ITR ERROR:', error)
+            # iteration_num += 1
+            # end_stage = time.time()
             # print(iteration_num)
             # print('Stage Newton Section Ratio:',(end_s - start_s)/(end_stage - start_stage))
         end_sec = time.time()
@@ -1046,12 +1133,12 @@ class TimeMarching(IntegratorBase):
                 for param_name in self.parameter_dict:
                     if self.parameter_dict[param_name]['dynamic'] == True:
                         temp = np.array([self.parameter_dict[param_name]['val'][0].reshape(self.parameter_dict[param_name]['shape'])])
-                        run_dict[key] = temp
+                        run_dict[param_name] = temp
                     state_and_params.append(param_name)
 
                 # set and compute derivatives for initial time
                 self.profile_outputs_system.set_vars(run_dict)
-
+                self.profile_outputs_system.run_model({}, [])
                 d = self.profile_outputs_system.compute_total_derivatives(
                     outs, state_and_params)
 
@@ -1394,10 +1481,19 @@ class TimeMarching(IntegratorBase):
                 #             profile_wrts.append(key)
                 #             profile_run_dict[key] = temp
             if self.profile_outputs_bool == True:
+
+                # set dynamic parameters:
+                # CHANGE BACK:
+                for key in self.parameter_dict:
+                    if self.parameter_dict[key]['dynamic'] == True:
+                        profile_run_dict[key] = self.parameter_dict[key]['val'][time_now_index+1].reshape(self.parameter_dict[key]['shape'])
+
+                # run and compute totals of profile outputs
                 profile_wrts.extend(self.parameter_dict.keys())
                 for profiles in self.profile_output_dict:
                     profile_ofs.append(profiles)
                 self.profile_outputs_system.set_vars(profile_run_dict)
+                self.profile_outputs_system.run_model({}, [])
                 P = self.profile_outputs_system.compute_total_derivatives(
                     profile_ofs, profile_wrts)
 
@@ -1879,6 +1975,7 @@ class TimeMarching(IntegratorBase):
                     psi_temp = np.array(so['psi_tB_temp'][s_num])
                     for k in self.explicit_tools['stage_index_list'][s_num]:
                         psi_temp += (self.Ah[k][s_num]*so['psi_A_temp'][k])
+                    # print(type(psi_current))
 
                     # Multiply with jacobian
                     if self.OStype == 'NS':
@@ -1906,7 +2003,19 @@ class TimeMarching(IntegratorBase):
                             # print('d ', s_of, s_wrt, psi_temp, psi_current, so['Y_prime_current_T'][s_wrt][s_num])
 
                     elif self.OStype == 'OM':
-                        psi_current += psi_temp.dot(so['Y_prime_current_T'][s_wrt][s_num])
+                        # print(psi_current, psi_temp.dot(so['Y_prime_current_T'][s_wrt][s_num]))
+                        # print()
+                        # print(type((so['Y_prime_current_T'][s_wrt][s_num])), s_of, s_wrt, s_num)
+                        # print(type(psi_temp))
+                        # print(type(psi_current))
+                        # print(((so['Y_prime_current_T'][s_wrt][s_num])).shape, s_of, s_wrt, s_num)
+                        # print((psi_temp).shape)
+                        # print((psi_current).shape)
+
+                        if sp.issparse(so['Y_prime_current_T'][s_wrt][s_num]):
+                            psi_current += psi_temp*(so['Y_prime_current_T'][s_wrt][s_num])
+                        else:
+                            psi_current += psi_temp.dot(so['Y_prime_current_T'][s_wrt][s_num])
 
                 # Store psi_A
                 sw['psi_A_temp'][s_num] = psi_current

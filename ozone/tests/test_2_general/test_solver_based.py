@@ -43,7 +43,7 @@ def test_CSDL_solverbased_implicit():
 
 if __name__ == '__main__':
     print('--------------------------------------------------EXPLICIT--------------------------------------------------')
-    test_NS_solverbased_explicit()
+    # test_NS_solverbased_explicit()
     # total:  [1.04318295]
     # derivative norm: ('total', 'a') 0.0038016174938430344
     # derivative norm: ('total', 'x_0') 1.0181788066850965

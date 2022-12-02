@@ -19,6 +19,7 @@ class ODEComp(csdl.CustomExplicitOperation):
         self.parameters.declare('ODE_system')
         self.parameters.declare('define_dict')
         self.parameters.declare('stage_f_dict')
+        self.parameters.declare('recorder')
 
     def define(self):
         self.parameter_dict = self.parameters['parameter_dict']
@@ -31,6 +32,7 @@ class ODEComp(csdl.CustomExplicitOperation):
         self.ode_system = self.parameters['ODE_system']
         self.define_dict = self.parameters['define_dict']
         self.stage_f_dict = self.parameters['stage_f_dict']
+        self.recorder = self.parameters['recorder']
 
         self.num_steps = self.misc['num_steps']
         self.num_stages = self.misc['num_stages']

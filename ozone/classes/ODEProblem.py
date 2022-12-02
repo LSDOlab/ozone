@@ -335,7 +335,7 @@ class ODEProblem(object):
         """
         Dashboard recorder from LSDO dashboard
         """
-        self.integrator.recorder = recorder
+        self.integrator.ode_system.recorder = recorder
 
     def set_ode_system(self, ode_system, backend='python_csdl_backend'):
         """

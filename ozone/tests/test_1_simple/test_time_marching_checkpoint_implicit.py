@@ -106,12 +106,12 @@ def test_CSDL_timemarching_jvp_fwd_direct():
 
 if __name__ == '__main__':
     print('--------------------------------------------------IMPLICIT--------------------------------------------------')
-    test_NS_timemarching()
+    # test_NS_timemarching()
     # total:  [1.04318422]
     # derivative norm: ('total', 'a') 0.0037963794392402257
     # derivative norm: ('total', 'x_0') 1.0181786974206675
     # derivative norm: ('total', 'h') 19.463407640235026
-    test_CSDL_timemarching()
+    # test_CSDL_timemarching_jvp_fwd_direct()
     # total:  [1.04318422]
     # derivative norm: ('total', 'a') 0.0037963794392402257
     # derivative norm: ('total', 'x_0') 1.0181786974206675

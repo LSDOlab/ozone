@@ -18,23 +18,26 @@ def check_derivs(dict):
             assert pytest.approx(derivative, rel=1e-4) == 57.2619945203023
         elif key == ('total2', 'a'):
             # assert pytest.approx(derivative, rel=1e-3) == 0.0057375166097572835
-            assert pytest.approx(derivative, rel=1e-3) == 0.8732165148498291
+            assert pytest.approx(derivative, rel=1e-3) == 2.5184462112810233
         elif key == ('total2', 'x_0'):
             # assert pytest.approx(derivative, rel=1e-4) == 1.0813055871226822
-            assert pytest.approx(derivative, rel=1e-4) == 0.009068049892864668
+            assert pytest.approx(derivative, rel=1e-4) == 0.0262064210650258
         elif key == ('total2', 'h'):
             # assert pytest.approx(derivative, rel=1e-4) == 57.2699201278553
-            assert pytest.approx(derivative, rel=1e-4) == 15.741577032150477
+            assert pytest.approx(derivative, rel=1e-4) == 22.765760735534432
         elif key == ('total2', 'z_0'):
             # assert pytest.approx(derivative, rel=1e-4) == 57.2699201278553
             assert pytest.approx(derivative, rel=1e-4) == 1.9900498337491679
         elif key == ('total2', 'e'):
             # assert pytest.approx(derivative, rel=1e-4) == 57.2699201278553
-            assert pytest.approx(derivative, rel=1e-4) == 1.4149978079315917
+            assert pytest.approx(derivative, rel=1e-4) == 5.1409600578737615
+
 
 
 def check_output(output):
-    assert pytest.approx(output, rel=1e-4) == 2.80508725
+    # assert pytest.approx(output, rel=1e-4) == 2.80508725
+    assert pytest.approx(output, rel=1e-4) == 2.80503345
+
 
 
 def get_settings_dict():
