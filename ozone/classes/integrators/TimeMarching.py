@@ -1010,7 +1010,7 @@ class TimeMarching(IntegratorBase):
                     self.field_output_dict[key]['num'])
             elif key in self.state_output_name_tuple:
                 state_name = self.output_state_name_dict[key]['state_name']
-                self.output_state_name_dict[key]['v'] = d_outputs_in[key].reshape(
+                self.output_state_name_dict[key]['v'] = np.array(d_outputs_in[key]).reshape(
                     self.state_dict[state_name]['output_num'])
         # Initial Condition if applicable
         jvp_REV = {}
