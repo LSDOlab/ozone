@@ -34,7 +34,7 @@ class Wrap(object):
             if parameters is None:
                 sim = python_csdl_backend.Simulator(self.system(num_nodes=num_param))
             else:
-                sim = python_csdl_backend.Simulator(self.system(num_nodes=num_param, **parameters), display_scripts=1)
+                sim = python_csdl_backend.Simulator(self.system(num_nodes=num_param, **parameters))
 
             self.problem = sim
 
