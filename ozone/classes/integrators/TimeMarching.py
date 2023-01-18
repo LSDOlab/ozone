@@ -344,6 +344,14 @@ class TimeMarching(IntegratorBase):
                     # if t_index_start == 0:
                     self.state_dict[key]['Y_prime_full'][s_key].append([])
 
+                    # REMOVE LATER:
+                    # DUMMY:
+                    # numy = self.total_numstagestate
+                    # numx = self.total_numstagestate*self.num_times
+                    # # for state in self.state_dict:
+                    # #     numx += self.state_dict[state]['num_stage_state']
+                    # self.DUMMY_MEMORY = np.ones((numy, numx))
+
                 # Initializing df/dp storage:
                 if self.param_bool == True:
                     self.state_dict[key]['df_dp'] = {}

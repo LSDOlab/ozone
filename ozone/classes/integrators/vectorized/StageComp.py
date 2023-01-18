@@ -76,7 +76,7 @@ class StageComp(csdl.CustomExplicitOperation):
         # start_full = time.time()
         # print('STAGE TIMINGS')
         for stage_key in self.stage_dict:
-            start = time.time()
+            # start = time.time()
             state_name = self.stage_dict[stage_key]['state_name']
             sd = self.state_dict[state_name]
 
@@ -100,3 +100,14 @@ class StageComp(csdl.CustomExplicitOperation):
             partials[stage_out_name, h_name] = sd['dYdH_coefficient'].dot(np.diagflat(Fbar))
             partials[stage_out_name, f_name] = sd['dYdH_coefficient'].dot(np.diagflat(t_vec))
             # end = time.time()
+
+            # x = sd['dYdH_coefficient']
+            # x = sd['A_full'] + sd['UImV_inv'] * sd['B_full']
+            # x = sd['UImV_inv']
+
+            # print(x[:,10])
+            # import matplotlib.pyplot as plt
+            # print(1.0 - ( np.count_nonzero(x) / float(x.size) ))
+            # plt.spy(x)
+            # plt.show()
+            # exit()

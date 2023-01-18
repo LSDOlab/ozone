@@ -34,7 +34,9 @@ class VectorBased(IntegratorBase):
                 'num': self.state_dict[key]['num']*self.num_steps*self.num_stages,
                 'state_name': key,
                 'h_name': h_name,
-                'stage_comp_out_name': stage_name + '_2'}
+                'stage_comp_out_name': stage_name + '_2',
+                'stage_f_name': stage_f_name,
+            }
             self.stage_f_dict[self.state_dict[key]['f_name']] = {}
             self.stage_f_dict[self.state_dict[key]['f_name']]['res_name'] = stage_f_name
             self.stage_f_dict[self.state_dict[key]['f_name']]['state_name'] = state_f_name
@@ -63,8 +65,29 @@ class VectorBased(IntegratorBase):
                 sp.eye(self.num_steps, n=self.num_steps+1, format='csc'), U_kron, format='csc')
             self.state_dict[key]['B_full'] = sp.kron(sp.eye(
                 self.num_steps + 1, n=self.num_steps, k=-1, format='csc'), B_kron, format='csc')
+            self.state_dict[key]['V_full'] = sp.kron(sp.eye(
+                self.num_steps+1, k=-1, format='csc'), V_kron, format='csc')
+
             self.state_dict[key]['ImV_inv'] = ImV_full_inv
             self.state_dict[key]['UImV_inv'] = self.state_dict[key]['U_full']*ImV_full_inv
+            
+            # # REMOVE:::
+            # V_full = sp.kron(sp.eye(self.num_steps+1, k=-1, format='csc'), V_kron, format='csc')
+            # # print('ImV_full_inv: ', ImV_full_inv.shape)
+            # print('U_full:       ', self.state_dict[key]['U_full'].shape)
+            # print('V_full:       ', V_full.shape)
+            # # print('UImV_inv:     ', self.state_dict[key]['UImV_inv'].shape)
+            # # print('B:     ', self.state_dict[key]['B_full'].shape)
+            # # print((self.state_dict[key]['UImV_inv']*self.state_dict[key]['B_full']+self.state_dict[key]['A_full']).shape)
+            # # print((self.state_dict[key]['UImV_inv']*self.state_dict[key]['B_full']+self.state_dict[key]['A_full']).toarray())
+            # # x = spln.inv(self.state_dict[key]['UImV_inv']*self.state_dict[key]['B_full']+self.state_dict[key]['A_full'])
+            # x = self.state_dict[key]['U_full']*V_full
+            # print(x)
+            # import matplotlib.pyplot as plt
+            # # print(1.0 - ( np.count_nonzero(x) / float(x.size) ))
+            # plt.spy(x)
+            # plt.show()            
+            # exit()
 
             # Defining Shapes
             if type(self.state_dict[key]['shape']) == int:
@@ -81,6 +104,9 @@ class VectorBased(IntegratorBase):
                     self.num_stage_time,) + self.state_dict[key]['shape']
                 self.state_dict[key]['output_shape'] = (
                     self.num_steps+1,) + self.state_dict[key]['shape']
+            self.state_dict[key]['nn_size'] = np.prod(self.state_dict[key]['nn_shape'])
+            self.state_dict[key]['flat_output_size'] = np.prod(self.state_dict[key]['output_shape'])
+            self.state_dict[key]['flat_output_shape'] = (self.state_dict[key]['flat_output_size'],)
 
             self.state_dict[key]['nn_guess'] = np.linspace(
                 self.state_dict[key]['guess'][0], 
