@@ -425,14 +425,14 @@ class VectorBasedGroup(csdl.Model):
                     stage_name,
                     shape=state_dict_current['nn_shape'],
                     val=state_dict_current['nn_guess']))
-                self.add_design_variable(stage_name)  # YBar design variable to feed into F
+                self.add_design_variable(stage_name, scaler=state_dict_current['scaler'])  # YBar design variable to feed into F
 
                 state_dv_var = self.create_input(
                     state_dv_name,
                     shape=state_dict_current['state_dv_info']['shape'],
                     val=state_dict_current['state_dv_info']['guess'])
                 store_dv_state_var.append(state_dv_var)
-                self.add_design_variable(state_dv_name)  # ybar design variable without  initial conditions
+                self.add_design_variable(state_dv_name, scaler=state_dict_current['scaler'])  # ybar design variable without  initial conditions
 
                 # 2) Add initial conditions to ybar.
                 for csdl_input_var in output_tup_IPC:
@@ -533,8 +533,8 @@ class VectorBasedGroup(csdl.Model):
                 test1 = self.register_output(constraint_1_name, c1)
                 test2 = self.register_output(constraint_2_name, c2[state_dict_current['num']:])
 
-                self.add_constraint(constraint_1_name, equals=0.0)
-                self.add_constraint(constraint_2_name, equals=0.0)
+                self.add_constraint(constraint_1_name, equals=0.0, scaler=state_dict_current['scaler'])
+                self.add_constraint(constraint_2_name, equals=0.0, scaler=state_dict_current['scaler'])
 
             if self.integrator.visualization == 'end':
                 plot_var_list = []

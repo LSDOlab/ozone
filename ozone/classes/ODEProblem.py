@@ -170,14 +170,17 @@ class ODEProblem(object):
         else:
             raise ValueError('step_vector has not been set.')
 
-    def add_state(self,
-                  state_name,
-                  f_name,
-                  shape=1,
-                  initial_condition_name=None,
-                  fixed_input=False,
-                  output=None,
-                  interp_guess=[1.0, 1.0]):
+    def add_state(
+        self,
+        state_name,
+        f_name,
+        shape=1,
+        initial_condition_name=None,
+        fixed_input=False,
+        output=None,
+        interp_guess=[1.0, 1.0],
+        scaler = None,
+        ):
         """
         define state
 
@@ -197,8 +200,10 @@ class ODEProblem(object):
                 If true, the initial condition is fixed_input. ie. derivatives wrt initial conditions are manually set to zero and not computed. This saves computation time.
             output: str
                 If solved state is desired as an output to the integrator, specify name of output. Declare this variable name to access in csdl.
-            interp_guess: np.array, float
-                If solution approach is 'collocation', set an initial guess. Default is 1.0.
+            interp_guess: list
+                Set an initial guess for state history. Pass in an iterable of two values. The guess will be a linear interpolation from the first to second value (LIMITED TO COLLOCATION APPROACH)
+            scaler: int, float
+                integer to scale state collocation design variables. Advised to be roughly 1/x where x is the around the average value of the state. (LIMITED TO COLLOCATION APPROACH)
         """
         # error:
         if initial_condition_name is None:
@@ -209,6 +214,13 @@ class ODEProblem(object):
             # TODO: add more options.
             raise ValueError('interp_guess must be a list with two elements')
 
+        # If a scaler is not given, use average of linear interp values
+        if scaler is None:
+            if (interp_guess[0] + interp_guess[1]) == 0:
+                scaler = 1.0
+            else:
+                scaler = 2.0/(interp_guess[0] + interp_guess[1])
+
         # Dictionary of state properties
         temp_dict = {
             'shape': shape,
@@ -218,7 +230,9 @@ class ODEProblem(object):
             'f_val': None,
             'val': None,
             'fixed_input': fixed_input,
-            'guess': interp_guess}
+            'guess': interp_guess,
+            'scaler': scaler,
+        }
         self.integrator.state_dict[state_name] = temp_dict
         self.integrator.f2s_dict[f_name] = state_name
         temp_dict = {
