@@ -7,6 +7,7 @@ __pycache__
 *.pyc
 *.out
 *.pdf
+*.png
 *_hw*
 
 # File systems
