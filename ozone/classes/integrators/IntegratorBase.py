@@ -57,6 +57,7 @@ class IntegratorBase(object):
         # Get GLM Coefficients and explicit/implicit boolean for integration
         (self.GLM_A, self.GLM_B, self.GLM_U, self.GLM_V,
          self.explicit) = get_integration_method(self.method)
+        self.num_stages = len(self.GLM_A)  # Number of stages (4 for RK4)
 
         #  WHATISTHIS
         self.dt = 1e-7
@@ -168,7 +169,6 @@ class IntegratorBase(object):
                 self.all_fixed_IC = False
 
         # Number of stages
-        self.num_stages = len(self.GLM_A)  # Number of stages (4 for RK4)
         self.GLM_C = self.GLM_A.dot(np.ones((self.num_stages, 1)))
         if self.explicit:
             self.GLM_C_minus = 1.0 - self.GLM_C
@@ -242,7 +242,6 @@ class IntegratorBase(object):
         method gets overwritten by proper solver.
         """
         raise NotImplementedError('get_solver_model not implemented')
-
 
     def check_partials(self, sys):
         """

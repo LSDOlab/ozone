@@ -281,12 +281,12 @@ class TimeMarching(IntegratorBase):
             store_checkpoints = True
 
             # Store first checkpoint: The initial condition
-            for key in self.checkpoints[self.num_checkpoints-1]['checkpoint_snapshot-']:
+            for key in self.checkpoints[self.num_checkpoints-1]:
                 sd = self.state_dict[key]
                 snapshot = (self.IC_dict[sd['IC_name']]
                             ['val']).reshape((sd['num'],))
                 self.checkpoints[self.num_checkpoints -
-                                 1]['checkpoint_snapshot-'][key] = snapshot
+                                 1][key] = snapshot
 
             # The checkpoint list index that decreases everytime a checkpoint is stored
             checkpoint_index = self.num_checkpoints-2
@@ -554,9 +554,45 @@ class TimeMarching(IntegratorBase):
                 if time_now_index == self.checkpoint_indices[checkpoint_index]:
 
                     # Store states
-                    for key in self.checkpoints[checkpoint_index]['checkpoint_snapshot-']:
+                    for key in self.checkpoints[checkpoint_index]:
                         sd = self.state_dict[key]
-                        self.checkpoints[checkpoint_index]['checkpoint_snapshot-'][key] = sd['y_current']
+                        self.checkpoints[checkpoint_index][key] = sd['y_current']
+
+                    # import sys
+                    # import gc
+                    # import sys
+
+                    # def get_obj_size(obj):
+                    #     marked = {id(obj)}
+                    #     obj_q = [obj]
+                    #     sz = 0
+
+                    #     while obj_q:
+                    #         sz += sum(map(sys.getsizeof, obj_q))
+
+                    #         # Lookup all the object referred to by the object in obj_q.
+                    #         # See: https://docs.python.org/3.7/library/gc.html#gc.get_referents
+                    #         all_refr = ((id(o), o) for o in gc.get_referents(*obj_q))
+
+                    #         # Filter object that are already marked.
+                    #         # Using dict notation will prevent repeated objects.
+                    #         new_refr = {o_id: o for o_id, o in all_refr if o_id not in marked and not isinstance(o, type)}
+
+                    #         # The new obj_q will be the ones that were not marked,
+                    #         # and we will update marked with their ids so we will
+                    #         # not traverse them again.
+                    #         obj_q = new_refr.values()
+                    #         marked.update(new_refr.keys())
+
+                    #     return sz
+
+                    # print(time_now_index)
+                    # print('THEORETICAL: ', np.prod(sd['y_current'].shape)*8)
+                    # print('NUMPY:       ', sd['y_current'].nbytes)
+                    # print('SIZEOF:      ', get_obj_size(sd['y_current']))
+                    # print('SIZEOF (all):', get_obj_size(self.checkpoints))
+                    # print('SIZEOF (CPI):', get_obj_size(self.checkpoint_indices))
+                    # print()
 
                     checkpoint_index = checkpoint_index - 1
 

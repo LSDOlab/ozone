@@ -9,6 +9,7 @@ __pycache__
 *.pdf
 *.png
 *_hw*
+*.npy
 
 # File systems
 *.DS_Store

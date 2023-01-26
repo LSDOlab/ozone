@@ -35,7 +35,7 @@ class TimeMarchingWithCheckpointing(TimeMarching):
 
         # If number of checkpoints aren't given, automatically set number of checkpoints = sqrt(num timesteps)
         if self.num_checkpoints == None:
-            self.num_checkpoints = round(self.num_steps**0.5)
+            self.num_checkpoints = round((self.num_times*(self.num_stages+1))**0.5)
 
         # Create checkpoint indices given user-defined number of checkpoints
         # Checkpoints are uniformly distributed accross time interval
@@ -56,11 +56,14 @@ class TimeMarchingWithCheckpointing(TimeMarching):
             else:
                 index_plus = self.checkpoint_indices[i-1]
             index_minus = self.checkpoint_indices[i]
-            checkpoint_preallocation_dict = {
-                'index+': index_plus,
-                'index-': index_minus,
-                'checkpoint_snapshot-': checkpoint_snapshot.copy()}
-            self.checkpoints.append(checkpoint_preallocation_dict)
+            # checkpoint_preallocation_dict = {
+            #     0: index_plus,
+            #     1: index_minus,
+            #     2: checkpoint_snapshot.copy()}
+            # checkpoint_preallocation_dict = [index_plus, index_minus, checkpoint_snapshot.copy()]
+            # self.checkpoints.append(checkpoint_preallocation_dict)
+            self.checkpoints.append(checkpoint_snapshot.copy())
+
         # print(' =====CHECKPOINTS: ', self.checkpoints)
         self.visualization = None
 
@@ -93,24 +96,27 @@ class TimeMarchingWithCheckpointing(TimeMarching):
         # Loop going over checkpoints from last point to first point
         for i in range(len(self.checkpoints)):
             # Compute integration from checkpoint i-1 to i
-            integration_settings['state_IC'] = self.checkpoints[i]['checkpoint_snapshot-']
+            integration_settings['state_IC'] = self.checkpoints[i]
             if i > 0:
-                integration_settings['t_index_end'] = self.checkpoints[i]['index+']+1
+                integration_settings['t_index_end'] = self.checkpoint_indices[i-1]+1
             else:
-                integration_settings['t_index_end'] = self.checkpoints[i]['index+']
-            integration_settings['t_index_start'] = self.checkpoints[i]['index-']
+                integration_settings['t_index_end'] = self.num_steps+1
+            # integration_settings['t_index_start'] = self.checkpoints[i][1]
+            integration_settings['t_index_start'] = self.checkpoint_indices[i]
+
             self.integrate_ODE_phase(integration_settings)
 
             # Compute JVP from checkpoint i to i-1
             if i == len(self.checkpoints) - 1:
                 t_start_i = 0
             else:
-                t_start_i = self.checkpoints[i]['index-']
+                # t_start_i = self.checkpoints[i][1]
+                t_start_i = self.checkpoint_indices[i]
 
             if i == 0:
-                t_end_i = self.checkpoints[i]['index+']-1
+                t_end_i = self.num_steps
             else:
-                t_end_i = self.checkpoints[i]['index+']
+                t_end_i = self.checkpoint_indices[i-1]
             din_n = self.compute_JVP_phase(
                 din, do, t_start_index=t_start_i, t_end_index=t_end_i, checkpoints=True)
             din = din_n
