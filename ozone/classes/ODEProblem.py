@@ -212,14 +212,22 @@ class ODEProblem(object):
             raise ValueError(f'state shape must integer or tuple')
         if not isinstance(interp_guess, list):
             # TODO: add more options.
-            raise ValueError('interp_guess must be a list with two elements')
+            raise ValueError('interp_guess must be a list with two floats or two numpy arrays')
+        elif len(interp_guess) != 2:
+            raise ValueError('interp_guess must be a list with two integers or two numpy arrays')
 
         # If a scaler is not given, use average of linear interp values
         if scaler is None:
-            if (interp_guess[0] + interp_guess[1]) == 0:
-                scaler = 1.0
+            if isinstance(interp_guess[0], np.ndarray):
+                if np.linalg.norm((interp_guess[0] + interp_guess[1])) < 1e-7:
+                    scaler = 1.0
+                else:
+                    scaler = 2.0/np.linalg.norm((interp_guess[0] + interp_guess[1]))
             else:
-                scaler = 2.0/(interp_guess[0] + interp_guess[1])
+                if (interp_guess[0] + interp_guess[1]) == 0:
+                    scaler = 1.0
+                else:
+                    scaler = 2.0/(interp_guess[0] + interp_guess[1])
 
         # Dictionary of state properties
         temp_dict = {

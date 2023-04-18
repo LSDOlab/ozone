@@ -55,9 +55,7 @@ class VectorBased(IntegratorBase):
                 self.state_dict[key]['num'], format='csc'), format='csr')
             V_kron = sp.kron(sp.csc_matrix(self.GLM_V), sp.eye(
                 self.state_dict[key]['num'], format='csc'), format='csr')
-            ImV_full = sp.eye((self.num_steps+1)*self.state_dict[key]['num'], format='csc') - sp.kron(
-                sp.eye(self.num_steps+1, k=-1, format='csc'), V_kron, format='csc')
-            ImV_full_inv = spln.inv(ImV_full)
+
 
             self.state_dict[key]['A_full'] = sp.kron(
                 sp.eye(self.num_steps, format='csc'), A_kron, format='csc')
@@ -67,9 +65,6 @@ class VectorBased(IntegratorBase):
                 self.num_steps + 1, n=self.num_steps, k=-1, format='csc'), B_kron, format='csc')
             self.state_dict[key]['V_full'] = sp.kron(sp.eye(
                 self.num_steps+1, k=-1, format='csc'), V_kron, format='csc')
-
-            self.state_dict[key]['ImV_inv'] = ImV_full_inv
-            self.state_dict[key]['UImV_inv'] = self.state_dict[key]['U_full']*ImV_full_inv
             
             # # REMOVE:::
             # V_full = sp.kron(sp.eye(self.num_steps+1, k=-1, format='csc'), V_kron, format='csc')
@@ -111,7 +106,7 @@ class VectorBased(IntegratorBase):
             self.state_dict[key]['nn_guess'] = np.linspace(
                 self.state_dict[key]['guess'][0], 
                 self.state_dict[key]['guess'][1], 
-                num = np.prod(self.state_dict[key]['nn_shape'])).reshape(self.state_dict[key]['nn_shape'])
+                num = self.num_stage_time).reshape(self.state_dict[key]['nn_shape'])
 
         # Parameter Meta Names and shapes
         for key in self.parameter_dict:
@@ -136,12 +131,7 @@ class VectorBased(IntegratorBase):
 
         # For the csdl explicit components, we need to track the ORDER in which we declare inputs and outputs for each component
         # This is so annoyingly complex but currently cannot think of a better way
-        self.var_order_name = {}
-        comp_list = ['InputProcessComp', 'ODEComp', 'StageComp', 'StateComp', 'FieldComp', 'ProfileComp']
-        for comp_name in comp_list:
-            # We have a dictionary for each component that we feed through
-            var_dict = self.order_variables(comp_name)
-            self.var_order_name[comp_name] = var_dict
+
 
         # ===================== UNCOMMENT TO SEE VARIABLE ORDERING HIERARCHY =====================
         # print('VARIABLE DICTIONARY HIERARCHY')

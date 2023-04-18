@@ -43,8 +43,8 @@ def run_ode(settings_dict):
 
             # Inputs names correspond to respective upstream CSDL variables
             self.add_state('y', 'dy_dt', initial_condition_name='y_0')
-            self.add_state('x', 'dx_dt', initial_condition_name='x_0')
-            self.add_state('z', 'dz_dt', initial_condition_name='z_0', shape=(2, 2), output='z_integrated')
+            self.add_state('x', 'dx_dt', initial_condition_name='x_0', interp_guess = [1.0, 1.0])
+            self.add_state('z', 'dz_dt', initial_condition_name='z_0', shape=(2, 2), output='z_integrated', interp_guess = [np.array([[10, 20],[30, 40]]), np.array([[20, 30],[40, 50]])])
             self.add_times(step_vector='h')
 
             # Define ODE and Profile Output systems (Either CSDL Model or Native System)

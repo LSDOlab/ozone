@@ -29,7 +29,7 @@ class Collocation(VectorBased):
             guess = np.linspace(
                 self.state_dict[state_name]['guess'][0],
                 self.state_dict[state_name]['guess'][1],
-                num=dv_size).reshape(shape)
+                num=self.num_steps).reshape(shape)
 
             state_dv_name = self.stage_dict[stage_name]['state_dv_name']
             self.state_dict[state_name]['state_dv_info'] = {
@@ -37,6 +37,13 @@ class Collocation(VectorBased):
                 'shape': shape,
                 'guess': guess,
             }
+
+        self.var_order_name = {}
+        comp_list = ['InputProcessComp', 'ODEComp','FieldComp', 'ProfileComp']
+        for comp_name in comp_list:
+            # We have a dictionary for each component that we feed through
+            var_dict = self.order_variables(comp_name)
+            self.var_order_name[comp_name] = var_dict
 
         return self.num_stage_time, self.num_steps+1
 

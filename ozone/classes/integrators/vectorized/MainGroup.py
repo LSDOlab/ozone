@@ -555,10 +555,13 @@ class VectorBasedGroup(csdl.Model):
                 self.register_output('OZONE_PLOT_DUMMY', output_plot_temp)
 
             # process list of csdl variables and their states to feed into profile/field/regular outputs
-            StC_out_key = list(self.integrator.var_order_name['StateComp']['outputs'].keys())
+            # StC_out_key = list(self.integrator.var_order_name['StateComp']['outputs'].keys())
+            StC_out_key = list(self.integrator.output_state_list)
             output_tup_StC = []
             for state_name in StC_out_key:
-                state_out_name = self.integrator.var_order_name['StateComp']['outputs'][state_name]['name']
+                sd = self.integrator.state_dict[state_name]
+                # state_out_name = self.integrator.var_order_name['StateComp']['outputs'][state_name]['name']
+                state_out_name = sd['meta_name']
                 for finalized_state_var in store_finalized_state:
                     if finalized_state_var.name == state_out_name:
                         output_tup_StC.append(finalized_state_var)
