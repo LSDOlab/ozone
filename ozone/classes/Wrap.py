@@ -1,4 +1,5 @@
-
+import scipy.sparse as sp
+import numpy as np
 class Wrap(object):
     # Wrap(ODESystem)
     def __init__(self, system, backend):
@@ -6,6 +7,8 @@ class Wrap(object):
         self.system_type = 'OM'
 
         self.backend = backend
+        # self.backend = 'csdl_om'
+
         if self.backend not in ['csdl_om',  'python_csdl_backend']:
             raise ValueError(f'backend must be \'csdl_om\' or \'python_csdl_backend\'')
 
@@ -22,13 +25,13 @@ class Wrap(object):
 
         if self.backend == 'csdl_om':
             import csdl_om
-            from csdl import GraphRepresentation
+            # from csdl import GraphRepresentation
             if parameters is None:
-                sim = csdl_om.Simulator(GraphRepresentation(self.system(num_nodes=num_param)))
+                sim = csdl_om.Simulator((self.system(num_nodes=num_param)))
             else:
-                sim = csdl_om.Simulator(GraphRepresentation(self.system(num_nodes=num_param, **parameters)))
+                sim = csdl_om.Simulator((self.system(num_nodes=num_param, **parameters)))
 
-            self.problem = sim.executable
+            self.problem = sim.prob
         elif self.backend == 'python_csdl_backend':
             import python_csdl_backend
             if parameters is None:
@@ -70,7 +73,15 @@ class Wrap(object):
 
         # Computes Derivatives
         if approach == 'TM':
-            return self.problem.compute_totals(of=in_of, wrt=in_wrt, return_format='dict')
+            # self.check_totals(in_of, in_wrt)
+            # exit()
+            t = self.problem.compute_totals(of=in_of, wrt=in_wrt, return_format='dict')
+            
+            for temp in t:
+                for temptemp in t[temp]:  
+                    if sp.issparse(t[temp][temptemp]):
+                        t[temp][temptemp] = t[temp][temptemp].toarray().copy()
+            return t
         elif approach == 'SB':
             return self.problem.compute_totals(of=in_of, wrt=in_wrt, return_format='dict')
 

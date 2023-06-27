@@ -95,3 +95,18 @@ method_classes = {
     # 'RK4ST': RK4ST(),
     # 'RK6ST': RK6ST(),
 }
+
+
+if __name__ == '__main__':
+    def is_invertible(a):
+        return a.shape[0] == a.shape[1] and np.linalg.matrix_rank(a) == a.shape[0]
+    
+    for s in method_classes:
+        A, B, U, V, explicit = get_integration_method(s)
+        print(is_invertible(A), A,s)
+        # print(A)
+        # print(B)
+        # print(U)
+        # print(V)
+        # print()
+    

@@ -310,7 +310,7 @@ class TimeMarching(IntegratorBase):
             print('Integrating ODE ... ')
 
         # "IC's" for checkpointing
-        phase_initial_condition_dict = state_IC
+        phase_initial_condition_dict = state_IC.copy()
 
         time_vector = self.time_vector_full[t_index_start: t_index_end]
         h_vector = self.h_vector_full[t_index_start: t_index_end]
@@ -330,12 +330,10 @@ class TimeMarching(IntegratorBase):
 
                 # Store initial conditions
                 if integration_type == 'FWD and REV':
-                    self.state_dict[key]['y_storage'][:, [
-                        0]] = phase_initial_condition_dict[sd['IC_name']]['val'].reshape(sd['num'], 1)
+                    self.state_dict[key]['y_storage'][:, [0]] = phase_initial_condition_dict[sd['IC_name']]['val'].reshape(sd['num'], 1)
 
                 if integration_type == 'REV':
-                    self.state_dict[key]['y_storage'][:, [
-                        0]] = phase_initial_condition_dict[key].reshape(sd['num'], 1)
+                    self.state_dict[key]['y_storage'][:, [0]] = phase_initial_condition_dict[key].reshape(sd['num'], 1)
 
             if store_jac == True:
                 # Y_prime for initial condition is not used in JVP
@@ -1197,6 +1195,7 @@ class TimeMarching(IntegratorBase):
                             continue
                         dnow = d[key][state_name].reshape(
                             (pd['num_single'], self.state_dict[state_name]['num']))
+                        
                         icname = self.state_dict[state_name]['IC_name']
                         if self.profile_outputs_system.system_type == 'NS':
                             ptype = self.profile_outputs_system.partial_properties[key][state_name]['type']
@@ -1215,6 +1214,7 @@ class TimeMarching(IntegratorBase):
                         if param_d['fixed_input'] == True:
                             continue
                         dnow = d[key][param_name].reshape(pd['num_single'], param_d['num'])
+                        
                         if param_d['dynamic'] == False:
                             if self.profile_outputs_system.system_type == 'NS':
                                 ptype = self.profile_outputs_system.partial_properties[key][param_name]['type']
