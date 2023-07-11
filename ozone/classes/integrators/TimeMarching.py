@@ -852,8 +852,13 @@ class TimeMarching(IntegratorBase):
                             self.state_dict[key]['Y_prime_full'][s_key].append(
                                 Pd[f_name][s_key])
                     elif self.OStype == 'OM':
-                        self.state_dict[key]['Y_prime_full'][s_key].append(
-                            Pd[f_name][s_key])
+
+                        if sp.issparse(Pd[f_name][s_key]):
+                            self.state_dict[key]['Y_prime_full'][s_key].append(
+                                Pd[f_name][s_key].copy())
+                        else:
+                            self.state_dict[key]['Y_prime_full'][s_key].append(
+                                Pd[f_name][s_key])
 
         if store_jac == True:
             if self.param_bool == True:
@@ -960,7 +965,10 @@ class TimeMarching(IntegratorBase):
 
                         # State derivative jacobian
                         if self.OStype == 'OM':
-                            sd['Y_prime_full'][s_wrt][-1].append((Pd[f_name][s_wrt].reshape((sd['num'], self.state_dict[s_wrt]['num']))))
+                            if sp.issparse(Pd[f_name][s_wrt]):
+                                sd['Y_prime_full'][s_wrt][-1].append((Pd[f_name][s_wrt].reshape((sd['num'], self.state_dict[s_wrt]['num']))).copy())
+                            else: 
+                                sd['Y_prime_full'][s_wrt][-1].append((Pd[f_name][s_wrt].reshape((sd['num'], self.state_dict[s_wrt]['num']))))
                         else:  # 'NS'
                             partialtype = self.ode_system.partial_properties[f_name][s_wrt]['type']
 
@@ -999,10 +1007,14 @@ class TimeMarching(IntegratorBase):
                                             sd['df_dp'][key_param][-1] = np.vstack((sd['df_dp'][key_param][-1], PJac))
 
                                 elif self.OStype == 'OM':
+                                    
                                     if s_num == 0:
                                         sd['df_dp'][key_param].append(PJac)
                                     else:
-                                        sd['df_dp'][key_param][-1] = np.vstack((sd['df_dp'][key_param][-1], PJac))
+                                        if sp.issparse(PJac):
+                                            sd['df_dp'][key_param][-1] = sp.vstack((sd['df_dp'][key_param][-1], PJac))
+                                        else:
+                                            sd['df_dp'][key_param][-1] = np.vstack((sd['df_dp'][key_param][-1], PJac))
 
                             else:  # dynamic parameter jacobian storage
                                 if self.OStype == 'NS':
@@ -1035,8 +1047,12 @@ class TimeMarching(IntegratorBase):
                                         sd['df_dp'][key_param].append(PJac*self.GLM_C_minus[s_num][0])
                                         sd['df_dp+'][key_param].append(PJac*self.GLM_C[s_num][0])
                                     else:
-                                        sd['df_dp'][key_param][-1] = np.vstack((sd['df_dp'][key_param][-1], PJac*self.GLM_C_minus[s_num][0]))
-                                        sd['df_dp+'][key_param][-1] = np.vstack((sd['df_dp+'][key_param][-1], PJac*self.GLM_C[s_num][0]))
+                                        if sp.issparse(PJac):
+                                            sd['df_dp'][key_param][-1] = sp.vstack((sd['df_dp'][key_param][-1], PJac*self.GLM_C_minus[s_num][0]))
+                                            sd['df_dp+'][key_param][-1] = sp.vstack((sd['df_dp+'][key_param][-1], PJac*self.GLM_C[s_num][0]))
+                                        else:
+                                            sd['df_dp'][key_param][-1] = np.vstack((sd['df_dp'][key_param][-1], PJac*self.GLM_C_minus[s_num][0]))
+                                            sd['df_dp+'][key_param][-1] = np.vstack((sd['df_dp+'][key_param][-1], PJac*self.GLM_C[s_num][0]))
         #  Create vector of f's for next step
         for key in self.state_dict:
             sd = self.state_dict[key]
@@ -1163,7 +1179,11 @@ class TimeMarching(IntegratorBase):
                             elif ptype == 'row_col' or ptype == 'row_col_val' or ptype == 'sparse':
                                 jvp_REV[icname] += v_cur*(dnow)
                         if self.profile_outputs_system.system_type == 'OM':
-                            jvp_REV[icname] += v_cur.dot(dnow)
+
+                            if sp.issparse(dnow):
+                                jvp_REV[icname] += v_cur*(dnow)
+                            else:
+                                jvp_REV[icname] += v_cur.dot(dnow)
 
                     # profile JVP for initial params
                     for param_name in self.parameter_dict:
@@ -1181,7 +1201,11 @@ class TimeMarching(IntegratorBase):
                                 elif ptype == 'row_col' or ptype == 'row_col_val' or ptype == 'sparse':
                                     jvp_REV[param_name] += v_cur*(dnow)
                             if self.profile_outputs_system.system_type == 'OM':
-                                jvp_REV[param_name] += v_cur.dot(dnow)
+                                if sp.issparse(dnow):
+                                    jvp_REV[param_name] += v_cur*(dnow)
+                                else:
+                                    jvp_REV[param_name] += v_cur.dot(dnow)
+                                
                         else:
                             if self.profile_outputs_system.system_type == 'NS':
                                 ptype = self.profile_outputs_system.partial_properties[key][param_name]['type']
@@ -1192,7 +1216,10 @@ class TimeMarching(IntegratorBase):
                                 elif ptype == 'row_col' or ptype == 'row_col_val' or ptype == 'sparse':
                                     jvp_REV[param_name][0:param_d['num']] += v_cur*(dnow)
                             if self.profile_outputs_system.system_type == 'OM':
-                                jvp_REV[param_name][0:param_d['num']] += v_cur.dot(dnow)
+                                if sp.issparse(dnow):
+                                    jvp_REV[param_name][0:param_d['num']] += v_cur*(dnow)
+                                else:
+                                    jvp_REV[param_name][0:param_d['num']] += v_cur.dot(dnow)
             # Field outputs
             for key in self.field_output_dict:
                 state_name = self.field_output_dict[key]['state_name']
@@ -1368,7 +1395,10 @@ class TimeMarching(IntegratorBase):
 
                                 # Store state jac. very similar to fwd stage computation for explicit
                                 if self.OStype == 'OM':
-                                    sd['Y_prime_current_T'][s_wrt].append((partials_current[f_name][s_wrt].reshape((sd['num'], swrt['num']))))
+                                    if sp.issparse(partials_current[f_name][s_wrt]):
+                                        sd['Y_prime_current_T'][s_wrt].append((partials_current[f_name][s_wrt].reshape((sd['num'], swrt['num']))).copy())
+                                    else:
+                                        sd['Y_prime_current_T'][s_wrt].append((partials_current[f_name][s_wrt].reshape((sd['num'], swrt['num']))))
                                 else:  # 'NS'
                                     partialtype = self.ode_system.partial_properties[f_name][s_wrt]['type']
 
@@ -1403,7 +1433,11 @@ class TimeMarching(IntegratorBase):
                                         if s_num == 0:
                                             sd['df_dp_current'][key_param] = PJac
                                             continue
-                                        sd['df_dp_current'][key_param] = np.vstack((sd['df_dp_current'][key_param], PJac))
+
+                                        if sp.issparse(PJac):
+                                            sd['df_dp_current'][key_param] = sp.vstack((sd['df_dp_current'][key_param], PJac))
+                                        else:
+                                            sd['df_dp_current'][key_param] = np.vstack((sd['df_dp_current'][key_param], PJac))
 
                                 else:  # Dynamic
                                     if self.OStype == 'NS':
@@ -1429,8 +1463,13 @@ class TimeMarching(IntegratorBase):
                                             sd['df_dp_current'][key_param] = PJac*self.GLM_C_minus[s_num][0]
                                             sd['df_dp_current+'][key_param] = PJac*self.GLM_C[s_num][0]
                                             continue
-                                        sd['df_dp_current'][key_param] = np.vstack((sd['df_dp_current'][key_param], PJac*self.GLM_C_minus[s_num][0]))
-                                        sd['df_dp_current+'][key_param] = np.vstack((sd['df_dp_current+'][key_param], PJac*self.GLM_C[s_num][0]))
+
+                                        if sp.issparse(PJac):
+                                            sd['df_dp_current'][key_param] = sp.vstack((sd['df_dp_current'][key_param], PJac*self.GLM_C_minus[s_num][0]))
+                                            sd['df_dp_current+'][key_param] = sp.vstack((sd['df_dp_current+'][key_param], PJac*self.GLM_C[s_num][0]))
+                                        else:
+                                            sd['df_dp_current'][key_param] = np.vstack((sd['df_dp_current'][key_param], PJac*self.GLM_C_minus[s_num][0]))
+                                            sd['df_dp_current+'][key_param] = np.vstack((sd['df_dp_current+'][key_param], PJac*self.GLM_C[s_num][0]))
             for key in self.state_dict:
                 sd = self.state_dict[key]
 
@@ -1517,7 +1556,10 @@ class TimeMarching(IntegratorBase):
                                 elif ptype == 'row_col' or ptype == 'row_col_val' or ptype == 'sparse':
                                     jvp_REV[param_name] += v_cur*(dnow)
                             if self.profile_outputs_system.system_type == 'OM':
-                                jvp_REV[param_name] += v_cur.dot(dnow)
+                                if sp.issparse(dnow):
+                                    jvp_REV[param_name] += v_cur*(dnow)
+                                else:
+                                    jvp_REV[param_name] += v_cur.dot(dnow)
                         else:
                             if self.profile_outputs_system.system_type == 'NS':
                                 ptype = self.profile_outputs_system.partial_properties[profile_output][param_name]['type']
@@ -1528,7 +1570,10 @@ class TimeMarching(IntegratorBase):
                                 elif ptype == 'row_col' or ptype == 'row_col_val' or ptype == 'sparse':
                                     jvp_REV[param_name][(t)*param_d['num']:(t+1) * param_d['num']] += v_cur*(dnow)
                             if self.profile_outputs_system.system_type == 'OM':
-                                jvp_REV[param_name][(t)*param_d['num']:(t+1) * param_d['num']] += v_cur.dot(dnow)
+                                if sp.issparse(dnow):
+                                    jvp_REV[param_name][(t)*param_d['num']:(t+1) * param_d['num']] += v_cur*(dnow)
+                                else:
+                                    jvp_REV[param_name][(t)*param_d['num']:(t+1) * param_d['num']] += v_cur.dot(dnow)
             else:
                 P = None
 
@@ -1682,7 +1727,10 @@ class TimeMarching(IntegratorBase):
                             elif self.OStype == 'OM':
                                 # Getting dfdp:
                                 dfdp_c = sd['df_dp_current'][p_key].reshape((sd['num_stage_state'], pd['num']))
-                                jvp_REVadd = sd['psi_tA'].dot(sd['nhAkron'].dot(dfdp_c)) - sd['psi_tB'].dot(dfdp_c)
+                                if sp.issparse(dfdp_c):
+                                    jvp_REVadd = (sd['psi_tA']*sd['nhAkron'] - sd['psi_tB']) * dfdp_c
+                                else:
+                                    jvp_REVadd = sd['psi_tA'].dot(sd['nhAkron'].dot(dfdp_c)) - sd['psi_tB'].dot(dfdp_c)
 
                             if pd['dynamic'] == False:
                                 jvp_REV[p_key] += jvp_REVadd
@@ -1750,8 +1798,13 @@ class TimeMarching(IntegratorBase):
                         self.state_dict[key]['psi_tC'] += - \
                             dpds_temp*(v_current)
                 elif self.profile_outputs_system.system_type == 'OM':
-                    self.state_dict[key]['psi_tC'] += - \
-                        dpds_temp.dot(v_current)
+                    
+                    if sp.issparse(dpds_temp):
+                        self.state_dict[key]['psi_tC'] += - \
+                            dpds_temp*(v_current)
+                    else:
+                        self.state_dict[key]['psi_tC'] += - \
+                            dpds_temp.dot(v_current)
 
             for field_key in self.field_output_dict:
                 if self.field_output_dict[field_key]['state_name'] == key:
@@ -1801,8 +1854,13 @@ class TimeMarching(IntegratorBase):
                     # print(len(sd['Y_prime_full'][s_wrt]))
                     # print(time_now_index)
                     pd = sd['Y_prime_current_T'][s_wrt]
-                    A_rhs_full[swrt['stage_ind'][0]:swrt['stage_ind']
-                               [1]] += (pd).dot(sd['psi_tB'])
+
+                    if sp.issparse(pd):
+                        A_rhs_full[swrt['stage_ind'][0]:swrt['stage_ind']
+                                   [1]] += pd*sd['psi_tB']
+                    else:
+                        A_rhs_full[swrt['stage_ind'][0]:swrt['stage_ind']
+                                [1]] += (pd).dot(sd['psi_tB'])
 
         # Create block matrix for jacobians NEEDS TO CHANGE?
         # Block matrix for jacobian
@@ -1886,7 +1944,10 @@ class TimeMarching(IntegratorBase):
                         sw['const_tb'][s_of] = so['Y_prime_current_T'][s_wrt].dot(so['psi_tB'])
 
                 elif self.OStype == 'OM':
-                    sw['const_tb'][s_of] = so['Y_prime_current_T'][s_wrt].dot(so['psi_tB'])
+                    if sp.issparse(so['Y_prime_current_T'][s_wrt]):
+                        sw['const_tb'][s_of] = so['Y_prime_current_T'][s_wrt]*so['psi_tB']
+                    else:
+                        sw['const_tb'][s_of] = so['Y_prime_current_T'][s_wrt].dot(so['psi_tB'])
 
         # START BGS ITERATION:
         converged = False
@@ -1923,7 +1984,10 @@ class TimeMarching(IntegratorBase):
                             sw['psi_tA'] += so['Y_prime_current_T'][s_wrt].dot(so['mult_r'])
 
                     elif self.OStype == 'OM':
-                        sw['psi_tA'] += so['Y_prime_current_T'][s_wrt].dot(so['mult_r'])
+                        if sp.issparse(so['Y_prime_current_T'][s_wrt]):
+                            sw['psi_tA'] += so['Y_prime_current_T'][s_wrt]*so['mult_r']
+                        else:
+                            sw['psi_tA'] += so['Y_prime_current_T'][s_wrt].dot(so['mult_r'])
 
             # Check for convergence. If even one of the states are not converged, move to next iteration
             for state in self.state_dict:
