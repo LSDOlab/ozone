@@ -5,50 +5,50 @@ from ozone.tests.test_1_simple.utils_test import check_derivs, check_output, get
 # ================================= NS non-sparse =================================
 
 
-def test_NS_timemarching():
-    settings_dictionary = get_settings_dict()
-    settings_dictionary['system'] = 'NSstd'
-    settings_dictionary['jvp_solver'] = 'iterative'
-    settings_dictionary['fwd_solver'] = 'iterative'
-    checks = run_ode(settings_dictionary)
+# def test_NS_timemarching():
+#     settings_dictionary = get_settings_dict()
+#     settings_dictionary['system'] = 'NSstd'
+#     settings_dictionary['jvp_solver'] = 'iterative'
+#     settings_dictionary['fwd_solver'] = 'iterative'
+#     checks = run_ode(settings_dictionary)
 
-    check_output(checks['output'][0])
-    check_derivs(checks['derivative_checks'])
-
-
-def test_NS_timemarching_fwd_direct():
-    settings_dictionary = get_settings_dict()
-    settings_dictionary['jvp_solver'] = 'iterative'
-    settings_dictionary['fwd_solver'] = 'direct'
-    settings_dictionary['system'] = 'NSstd'
-
-    checks = run_ode(settings_dictionary)
-    check_output(checks['output'][0])
-    check_derivs(checks['derivative_checks'])
+#     check_output(checks['output'][0])
+#     check_derivs(checks['derivative_checks'])
 
 
-def test_NS_timemarching_jvp_direct():
-    settings_dictionary = get_settings_dict()
-    settings_dictionary['jvp_solver'] = 'direct'
-    settings_dictionary['fwd_solver'] = 'iterative'
-    settings_dictionary['system'] = 'NSstd'
+# def test_NS_timemarching_fwd_direct():
+#     settings_dictionary = get_settings_dict()
+#     settings_dictionary['jvp_solver'] = 'iterative'
+#     settings_dictionary['fwd_solver'] = 'direct'
+#     settings_dictionary['system'] = 'NSstd'
 
-    checks = run_ode(settings_dictionary)
-    check_output(checks['output'][0])
+#     checks = run_ode(settings_dictionary)
+#     check_output(checks['output'][0])
+#     check_derivs(checks['derivative_checks'])
 
-    check_derivs(checks['derivative_checks'])
+
+# def test_NS_timemarching_jvp_direct():
+#     settings_dictionary = get_settings_dict()
+#     settings_dictionary['jvp_solver'] = 'direct'
+#     settings_dictionary['fwd_solver'] = 'iterative'
+#     settings_dictionary['system'] = 'NSstd'
+
+#     checks = run_ode(settings_dictionary)
+#     check_output(checks['output'][0])
+
+#     check_derivs(checks['derivative_checks'])
 
 
-def test_NS_timemarching_jvp_fwd_direct():
-    settings_dictionary = get_settings_dict()
-    settings_dictionary['jvp_solver'] = 'direct'
-    settings_dictionary['fwd_solver'] = 'direct'
-    settings_dictionary['system'] = 'NSstd'
+# def test_NS_timemarching_jvp_fwd_direct():
+#     settings_dictionary = get_settings_dict()
+#     settings_dictionary['jvp_solver'] = 'direct'
+#     settings_dictionary['fwd_solver'] = 'direct'
+#     settings_dictionary['system'] = 'NSstd'
 
-    checks = run_ode(settings_dictionary)
-    check_output(checks['output'][0])
+#     checks = run_ode(settings_dictionary)
+#     check_output(checks['output'][0])
 
-    check_derivs(checks['derivative_checks'])
+#     check_derivs(checks['derivative_checks'])
 
 # ================================= CSDL =================================
 

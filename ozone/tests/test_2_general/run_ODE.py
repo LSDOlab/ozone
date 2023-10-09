@@ -151,6 +151,15 @@ def run_ode(settings_dict):
 
     val = sim['total']
     print('total: ', val)
+    val2 = sim['total2']
+    print('total2: ', val2)
+    val = {
+        'total': np.array(val),
+        'total2':  np.array(val2),
+    }
+    # exit()
+    # total:  [2.8050334]
+    # total2:  22.27925077337252
 
     derivative_checks = sim.compute_totals(of=['total', 'total2'], wrt=['a', 'x_0', 'h', 'z_0', 'e'])
     # sim.check_totals(of=['total','total2'], wrt=['a', 'x_0', 'h', 'z_0', 'e'])

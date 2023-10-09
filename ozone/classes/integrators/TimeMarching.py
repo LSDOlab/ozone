@@ -879,7 +879,7 @@ class TimeMarching(IntegratorBase):
 
                             # print('BEFORE TRANSFORM', df_dp.shape, )
                             if sp.issparse(df_dp):
-                                df_dp_s = df_dp*pd['stage2state_transform_s']
+                                df_dp_s = df_dp@pd['stage2state_transform_s']
                                 df_dp_plus = df_dp * pd['stage2state_transform_s+']
                             else:
                                 df_dp_s = df_dp.dot(
@@ -1100,7 +1100,7 @@ class TimeMarching(IntegratorBase):
             t_end_index = self.num_steps
 
         if self.display != None:
-            print('Calculating Jacobian Vector Product ...')
+            print('Calculating Vector Jacobian Product ...')
 
         # Creating 'v' vector
         d_outputs = self.d_out
@@ -1181,7 +1181,11 @@ class TimeMarching(IntegratorBase):
                         if self.profile_outputs_system.system_type == 'OM':
 
                             if sp.issparse(dnow):
-                                jvp_REV[icname] += v_cur*(dnow)
+                                # print(state_name,jvp_REV[icname].shape, type(jvp_REV[icname]),  v_cur.shape, type(v_cur), dnow.shape, type(dnow))
+                                # jvp_REV[icname] += v_cur*(dnow)
+                                jvp_REV[icname] += v_cur@(dnow)
+
+                                # print('fine', jvp_REV[icname].shape)
                             else:
                                 jvp_REV[icname] += v_cur.dot(dnow)
 
@@ -1202,7 +1206,7 @@ class TimeMarching(IntegratorBase):
                                     jvp_REV[param_name] += v_cur*(dnow)
                             if self.profile_outputs_system.system_type == 'OM':
                                 if sp.issparse(dnow):
-                                    jvp_REV[param_name] += v_cur*(dnow)
+                                    jvp_REV[param_name] += v_cur@(dnow)
                                 else:
                                     jvp_REV[param_name] += v_cur.dot(dnow)
                                 
@@ -1217,7 +1221,7 @@ class TimeMarching(IntegratorBase):
                                     jvp_REV[param_name][0:param_d['num']] += v_cur*(dnow)
                             if self.profile_outputs_system.system_type == 'OM':
                                 if sp.issparse(dnow):
-                                    jvp_REV[param_name][0:param_d['num']] += v_cur*(dnow)
+                                    jvp_REV[param_name][0:param_d['num']] += v_cur@(dnow)
                                 else:
                                     jvp_REV[param_name][0:param_d['num']] += v_cur.dot(dnow)
             # Field outputs
@@ -1557,7 +1561,7 @@ class TimeMarching(IntegratorBase):
                                     jvp_REV[param_name] += v_cur*(dnow)
                             if self.profile_outputs_system.system_type == 'OM':
                                 if sp.issparse(dnow):
-                                    jvp_REV[param_name] += v_cur*(dnow)
+                                    jvp_REV[param_name] += v_cur@(dnow)
                                 else:
                                     jvp_REV[param_name] += v_cur.dot(dnow)
                         else:
@@ -1571,7 +1575,7 @@ class TimeMarching(IntegratorBase):
                                     jvp_REV[param_name][(t)*param_d['num']:(t+1) * param_d['num']] += v_cur*(dnow)
                             if self.profile_outputs_system.system_type == 'OM':
                                 if sp.issparse(dnow):
-                                    jvp_REV[param_name][(t)*param_d['num']:(t+1) * param_d['num']] += v_cur*(dnow)
+                                    jvp_REV[param_name][(t)*param_d['num']:(t+1) * param_d['num']] += v_cur@(dnow)
                                 else:
                                     jvp_REV[param_name][(t)*param_d['num']:(t+1) * param_d['num']] += v_cur.dot(dnow)
             else:
@@ -1662,8 +1666,8 @@ class TimeMarching(IntegratorBase):
                                             (sd['num_stage_state'], self.num_stages*pd['num']))
 
                                         if sp.issparse(df_dp):
-                                            df_dp_store = df_dp*pd['stage2state_transform_s']
-                                            df_dp_next = df_dp*pd['stage2state_transform_s+']
+                                            df_dp_store = df_dp@pd['stage2state_transform_s']
+                                            df_dp_next = df_dp@pd['stage2state_transform_s+']
                                         else:
                                             df_dp_store = df_dp.dot(pd['stage2state_transform_d'])
                                             df_dp_next = df_dp.dot(pd['stage2state_transform_d+'])
@@ -1728,7 +1732,7 @@ class TimeMarching(IntegratorBase):
                                 # Getting dfdp:
                                 dfdp_c = sd['df_dp_current'][p_key].reshape((sd['num_stage_state'], pd['num']))
                                 if sp.issparse(dfdp_c):
-                                    jvp_REVadd = (sd['psi_tA']*sd['nhAkron'] - sd['psi_tB']) * dfdp_c
+                                    jvp_REVadd = (sd['psi_tA']*sd['nhAkron'] - sd['psi_tB']) @ dfdp_c
                                 else:
                                     jvp_REVadd = sd['psi_tA'].dot(sd['nhAkron'].dot(dfdp_c)) - sd['psi_tB'].dot(dfdp_c)
 
@@ -1780,8 +1784,12 @@ class TimeMarching(IntegratorBase):
             # PART A  -----------:
             for profile_key in self.profile_output_dict:
                 pd = self.profile_output_dict[profile_key]
+                dpds_temp = (P[profile_key][key].T)
 
-                dpds_temp = (P[profile_key][key].reshape((sd['num'], pd['num_single'])))
+                # OLD: was reshaping instead of transposing
+                # dpds_temp = (P[profile_key][key].reshape((sd['num'], pd['num_single'])))
+
+
                 v_current = pd['v'][pd['num_single'] * (t):pd['num_single']*(t+1)]
 
                 if self.profile_outputs_system.system_type == 'NS':
@@ -1801,7 +1809,7 @@ class TimeMarching(IntegratorBase):
                     
                     if sp.issparse(dpds_temp):
                         self.state_dict[key]['psi_tC'] += - \
-                            dpds_temp*(v_current)
+                            dpds_temp@(v_current)
                     else:
                         self.state_dict[key]['psi_tC'] += - \
                             dpds_temp.dot(v_current)
@@ -1857,7 +1865,7 @@ class TimeMarching(IntegratorBase):
 
                     if sp.issparse(pd):
                         A_rhs_full[swrt['stage_ind'][0]:swrt['stage_ind']
-                                   [1]] += pd*sd['psi_tB']
+                                   [1]] += pd@sd['psi_tB']
                     else:
                         A_rhs_full[swrt['stage_ind'][0]:swrt['stage_ind']
                                 [1]] += (pd).dot(sd['psi_tB'])
@@ -1945,7 +1953,7 @@ class TimeMarching(IntegratorBase):
 
                 elif self.OStype == 'OM':
                     if sp.issparse(so['Y_prime_current_T'][s_wrt]):
-                        sw['const_tb'][s_of] = so['Y_prime_current_T'][s_wrt]*so['psi_tB']
+                        sw['const_tb'][s_of] = so['Y_prime_current_T'][s_wrt]@so['psi_tB']
                     else:
                         sw['const_tb'][s_of] = so['Y_prime_current_T'][s_wrt].dot(so['psi_tB'])
 
@@ -1985,7 +1993,7 @@ class TimeMarching(IntegratorBase):
 
                     elif self.OStype == 'OM':
                         if sp.issparse(so['Y_prime_current_T'][s_wrt]):
-                            sw['psi_tA'] += so['Y_prime_current_T'][s_wrt]*so['mult_r']
+                            sw['psi_tA'] += so['Y_prime_current_T'][s_wrt]@so['mult_r']
                         else:
                             sw['psi_tA'] += so['Y_prime_current_T'][s_wrt].dot(so['mult_r'])
 
@@ -2077,7 +2085,7 @@ class TimeMarching(IntegratorBase):
                         # print((psi_current).shape)
 
                         if sp.issparse(so['Y_prime_current_T'][s_wrt][s_num]):
-                            psi_current += psi_temp*(so['Y_prime_current_T'][s_wrt][s_num])
+                            psi_current += psi_temp@(so['Y_prime_current_T'][s_wrt][s_num])
                         else:
                             psi_current += psi_temp.dot(so['Y_prime_current_T'][s_wrt][s_num])
 
