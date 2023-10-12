@@ -60,7 +60,7 @@ class Wrap(object):
             outputs[key] = self.problem[key]
         return outputs
 
-    def compute_total_derivatives(self, in_of, in_wrt, approach='TM'):
+    def compute_total_derivatives(self, in_of, in_wrt, approach='TM', vjp = None):
 
         self.num_df_calls += self.num_nodes
         self.num_vectorized_df_calls += 1
@@ -69,10 +69,10 @@ class Wrap(object):
             self.recorder.record(save_dict, 'ozone')
 
         # Computes Derivatives
-        if approach == 'TM':
+        if vjp is None:
             return self.problem.compute_totals(of=in_of, wrt=in_wrt, return_format='dict')
-        elif approach == 'SB':
-            return self.problem.compute_totals(of=in_of, wrt=in_wrt, return_format='dict')
+        else:
+            return self.problem.compute_vector_jacobian_product(of_vectors=vjp, wrt=in_wrt,return_format='dict')
 
     def set_vars(self, vars):
         # option to set variables

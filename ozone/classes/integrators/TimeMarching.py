@@ -1155,8 +1155,18 @@ class TimeMarching(IntegratorBase):
                 # set and compute derivatives for initial time
                 self.profile_outputs_system.set_vars(run_dict)
                 self.profile_outputs_system.run_model({}, [])
-                d = self.profile_outputs_system.compute_total_derivatives(
-                    outs, state_and_params)
+                # d = self.profile_outputs_system.compute_total_derivatives(
+                #     outs, state_and_params)
+
+                # Setting initial JVP
+                # ============================= NEW VJP =================================
+                vjp_dict = {}
+                for key in self.profile_output_dict:
+                    pd = self.profile_output_dict[key]
+                    v_cur = self.profile_output_dict[key]['v'][0:pd['num_single']]
+                    vjp_dict[key] = v_cur
+                dd = self.profile_outputs_system.compute_total_derivatives(
+                    outs, state_and_params, vjp = vjp_dict)
 
                 # Setting initial JVP
                 for key in self.profile_output_dict:
@@ -1167,63 +1177,128 @@ class TimeMarching(IntegratorBase):
                     for state_name in self.state_dict:
                         if self.state_dict[state_name]['fixed_input'] == True:
                             continue
-                        dnow = d[key][state_name].reshape(
-                            (pd['num_single'], self.state_dict[state_name]['num']))
+                        # dnow = d[key][state_name].reshape(
+                        #     (pd['num_single'], self.state_dict[state_name]['num']))
+                        
+                        vjped_dnow = dd[key][state_name].flatten()
                         icname = self.state_dict[state_name]['IC_name']
                         if self.profile_outputs_system.system_type == 'NS':
                             ptype = self.profile_outputs_system.partial_properties[key][state_name]['type']
                             if ptype == 'empty':
                                 continue
                             elif ptype == 'std' or ptype == 'cs_uc':
-                                jvp_REV[icname] += v_cur.dot(dnow)
+                                jvp_REV[icname] += vjped_dnow
                             elif ptype == 'row_col' or ptype == 'row_col_val' or ptype == 'sparse':
-                                jvp_REV[icname] += v_cur*(dnow)
+                                jvp_REV[icname] += vjped_dnow
                         if self.profile_outputs_system.system_type == 'OM':
-
-                            if sp.issparse(dnow):
-                                # print(state_name,jvp_REV[icname].shape, type(jvp_REV[icname]),  v_cur.shape, type(v_cur), dnow.shape, type(dnow))
-                                # jvp_REV[icname] += v_cur*(dnow)
-                                jvp_REV[icname] += v_cur@(dnow)
-
-                                # print('fine', jvp_REV[icname].shape)
-                            else:
-                                jvp_REV[icname] += v_cur.dot(dnow)
+                            jvp_REV[icname] += vjped_dnow
 
                     # profile JVP for initial params
                     for param_name in self.parameter_dict:
                         param_d = self.parameter_dict[param_name]
                         if param_d['fixed_input'] == True:
                             continue
-                        dnow = d[key][param_name].reshape(pd['num_single'], param_d['num'])
+                        # dnow = d[key][param_name].reshape(pd['num_single'], param_d['num'])
+                        vjped_dnow = dd[key][param_name].flatten()
                         if param_d['dynamic'] == False:
-                            if self.profile_outputs_system.system_type == 'NS':
-                                ptype = self.profile_outputs_system.partial_properties[key][param_name]['type']
-                                if ptype == 'empty':
-                                    continue
-                                elif ptype == 'std' or ptype == 'cs_uc':
-                                    jvp_REV[param_name] += v_cur.dot(dnow)
-                                elif ptype == 'row_col' or ptype == 'row_col_val' or ptype == 'sparse':
-                                    jvp_REV[param_name] += v_cur*(dnow)
-                            if self.profile_outputs_system.system_type == 'OM':
-                                if sp.issparse(dnow):
-                                    jvp_REV[param_name] += v_cur@(dnow)
-                                else:
-                                    jvp_REV[param_name] += v_cur.dot(dnow)
+                            jvp_REV[param_name] += vjped_dnow
+                            
+                            # if self.profile_outputs_system.system_type == 'NS':
+                            #     ptype = self.profile_outputs_system.partial_properties[key][param_name]['type']
+                            #     if ptype == 'empty':
+                            #         continue
+                            #     elif ptype == 'std' or ptype == 'cs_uc':
+                            #         jvp_REV[param_name] += vjped_dnow
+                            #     elif ptype == 'row_col' or ptype == 'row_col_val' or ptype == 'sparse':
+                            #         jvp_REV[param_name] += vjped_dnow
+                            # if self.profile_outputs_system.system_type == 'OM':
+                            #     jvp_REV[param_name] += vjped_dnow
+                            #     # if sp.issparse(dnow):
+                            #     #     jvp_REV[param_name] += vjped_dnow
+                            #     # else:
+                            #     #     jvp_REV[param_name] += v_cur.dot(dnow)
                                 
                         else:
-                            if self.profile_outputs_system.system_type == 'NS':
-                                ptype = self.profile_outputs_system.partial_properties[key][param_name]['type']
-                                if ptype == 'empty':
-                                    continue
-                                elif ptype == 'std' or ptype == 'cs_uc':
-                                    jvp_REV[param_name][0:param_d['num']] += v_cur.dot(dnow)
-                                elif ptype == 'row_col' or ptype == 'row_col_val' or ptype == 'sparse':
-                                    jvp_REV[param_name][0:param_d['num']] += v_cur*(dnow)
-                            if self.profile_outputs_system.system_type == 'OM':
-                                if sp.issparse(dnow):
-                                    jvp_REV[param_name][0:param_d['num']] += v_cur@(dnow)
-                                else:
-                                    jvp_REV[param_name][0:param_d['num']] += v_cur.dot(dnow)
+                            jvp_REV[param_name][0:param_d['num']] += vjped_dnow
+                            # if self.profile_outputs_system.system_type == 'NS':
+                            #     ptype = self.profile_outputs_system.partial_properties[key][param_name]['type']
+                            #     if ptype == 'empty':
+                            #         continue
+                            #     elif ptype == 'std' or ptype == 'cs_uc':
+                            #         jvp_REV[param_name][0:param_d['num']] += vjped_dnow
+                            #     elif ptype == 'row_col' or ptype == 'row_col_val' or ptype == 'sparse':
+                            #         jvp_REV[param_name][0:param_d['num']] += vjped_dnow
+                            # if self.profile_outputs_system.system_type == 'OM':
+                            #     jvp_REV[param_name][0:param_d['num']] += vjped_dnow
+                # ============================= NEW VJP =============================
+
+
+                # # Setting initial JVP
+                # for key in self.profile_output_dict:
+                #     pd = self.profile_output_dict[key]
+                #     v_cur = self.profile_output_dict[key]['v'][0:pd['num_single']]
+
+                #     # profile JVP for initial condition
+                #     for state_name in self.state_dict:
+                #         if self.state_dict[state_name]['fixed_input'] == True:
+                #             continue
+                #         dnow = d[key][state_name].reshape(
+                #             (pd['num_single'], self.state_dict[state_name]['num']))
+                #         icname = self.state_dict[state_name]['IC_name']
+                #         if self.profile_outputs_system.system_type == 'NS':
+                #             ptype = self.profile_outputs_system.partial_properties[key][state_name]['type']
+                #             if ptype == 'empty':
+                #                 continue
+                #             elif ptype == 'std' or ptype == 'cs_uc':
+                #                 jvp_REV[icname] += v_cur.dot(dnow)
+                #             elif ptype == 'row_col' or ptype == 'row_col_val' or ptype == 'sparse':
+                #                 jvp_REV[icname] += v_cur*(dnow)
+                #         if self.profile_outputs_system.system_type == 'OM':
+
+                #             if sp.issparse(dnow):
+                #                 # print(state_name,jvp_REV[icname].shape, type(jvp_REV[icname]),  v_cur.shape, type(v_cur), dnow.shape, type(dnow))
+                #                 # jvp_REV[icname] += v_cur*(dnow)
+                #                 jvp_REV[icname] += v_cur@(dnow)
+
+                #                 # print('fine', jvp_REV[icname].shape)
+                #             else:
+                #                 jvp_REV[icname] += v_cur.dot(dnow)
+
+                #     # profile JVP for initial params
+                #     for param_name in self.parameter_dict:
+                #         param_d = self.parameter_dict[param_name]
+                #         if param_d['fixed_input'] == True:
+                #             continue
+                #         dnow = d[key][param_name].reshape(pd['num_single'], param_d['num'])
+                #         if param_d['dynamic'] == False:
+                #             if self.profile_outputs_system.system_type == 'NS':
+                #                 ptype = self.profile_outputs_system.partial_properties[key][param_name]['type']
+                #                 if ptype == 'empty':
+                #                     continue
+                #                 elif ptype == 'std' or ptype == 'cs_uc':
+                #                     jvp_REV[param_name] += v_cur.dot(dnow)
+                #                 elif ptype == 'row_col' or ptype == 'row_col_val' or ptype == 'sparse':
+                #                     jvp_REV[param_name] += v_cur*(dnow)
+                #             if self.profile_outputs_system.system_type == 'OM':
+                #                 if sp.issparse(dnow):
+                #                     jvp_REV[param_name] += v_cur@(dnow)
+                #                 else:
+                #                     jvp_REV[param_name] += v_cur.dot(dnow)
+                                
+                #         else:
+                #             if self.profile_outputs_system.system_type == 'NS':
+                #                 ptype = self.profile_outputs_system.partial_properties[key][param_name]['type']
+                #                 if ptype == 'empty':
+                #                     continue
+                #                 elif ptype == 'std' or ptype == 'cs_uc':
+                #                     jvp_REV[param_name][0:param_d['num']] += v_cur.dot(dnow)
+                #                 elif ptype == 'row_col' or ptype == 'row_col_val' or ptype == 'sparse':
+                #                     jvp_REV[param_name][0:param_d['num']] += v_cur*(dnow)
+                #             if self.profile_outputs_system.system_type == 'OM':
+                #                 if sp.issparse(dnow):
+                #                     jvp_REV[param_name][0:param_d['num']] += v_cur@(dnow)
+                #                 else:
+                #                     jvp_REV[param_name][0:param_d['num']] += v_cur.dot(dnow)
             # Field outputs
             for key in self.field_output_dict:
                 state_name = self.field_output_dict[key]['state_name']
@@ -1384,7 +1459,9 @@ class TimeMarching(IntegratorBase):
                         # RUN MODEL SHOULD NOT HAVE TO BE CALLED, NEED CSDL TO BE FIXED
                         self.ode_system.run_model({}, [])
                         partials_current = self.ode_system.compute_total_derivatives(
-                            self.of_list, self.wrt_list)
+                            self.of_list,
+                            self.wrt_list,
+                        )
 
                         # set current partials
                         for s_of in self.state_dict:
@@ -1537,49 +1614,80 @@ class TimeMarching(IntegratorBase):
                     profile_ofs.append(profiles)
                 self.profile_outputs_system.set_vars(profile_run_dict)
                 self.profile_outputs_system.run_model({}, [])
-                P = self.profile_outputs_system.compute_total_derivatives(
-                    profile_ofs, profile_wrts)
+                # P = self.profile_outputs_system.compute_total_derivatives(
+                #     profile_ofs, profile_wrts)
+
+                # ========== NEWLY COMPUTED VJP ==========
+                vjp_dict = {}
+                for profile_output in self.profile_output_dict:
+                    pd = self.profile_output_dict[profile_output]
+                    v_cur = pd['v'][pd['num_single'] * (t):pd['num_single']*(t+1)]
+                    vjp_dict[profile_output] = v_cur
+                Pd = self.profile_outputs_system.compute_total_derivatives(
+                    profile_ofs, profile_wrts, vjp = vjp_dict)
+                # exit('success')
 
                 # profile JVP for initial params
                 for profile_output in self.profile_output_dict:
                     pd = self.profile_output_dict[profile_output]
-                    v_cur = pd['v'][pd['num_single'] * (t):pd['num_single']*(t+1)]
 
                     for param_name in self.parameter_dict:
                         param_d = self.parameter_dict[param_name]
                         if param_d['fixed_input'] == True:
                             continue
-                        dnow = P[profile_output][param_name].reshape(pd['num_single'], param_d['num'])
+                        vjped_dnow = Pd[profile_output][param_name].flatten()
+                        # print(profile_output,param_name,vjped_dnow)
+
                         if param_d['dynamic'] == False:
-                            if self.profile_outputs_system.system_type == 'NS':
-                                ptype = self.profile_outputs_system.partial_properties[profile_output][param_name]['type']
-                                if ptype == 'empty':
-                                    continue
-                                elif ptype == 'std' or ptype == 'cs_uc':
-                                    jvp_REV[param_name] += v_cur.dot(dnow)
-                                elif ptype == 'row_col' or ptype == 'row_col_val' or ptype == 'sparse':
-                                    jvp_REV[param_name] += v_cur*(dnow)
-                            if self.profile_outputs_system.system_type == 'OM':
-                                if sp.issparse(dnow):
-                                    jvp_REV[param_name] += v_cur@(dnow)
-                                else:
-                                    jvp_REV[param_name] += v_cur.dot(dnow)
+                            jvp_REV[param_name] += vjped_dnow
                         else:
-                            if self.profile_outputs_system.system_type == 'NS':
-                                ptype = self.profile_outputs_system.partial_properties[profile_output][param_name]['type']
-                                if ptype == 'empty':
-                                    continue
-                                elif ptype == 'std' or ptype == 'cs_uc':
-                                    jvp_REV[param_name][(t)*param_d['num']:(t+1) * param_d['num']] += v_cur.dot(dnow)
-                                elif ptype == 'row_col' or ptype == 'row_col_val' or ptype == 'sparse':
-                                    jvp_REV[param_name][(t)*param_d['num']:(t+1) * param_d['num']] += v_cur*(dnow)
-                            if self.profile_outputs_system.system_type == 'OM':
-                                if sp.issparse(dnow):
-                                    jvp_REV[param_name][(t)*param_d['num']:(t+1) * param_d['num']] += v_cur@(dnow)
-                                else:
-                                    jvp_REV[param_name][(t)*param_d['num']:(t+1) * param_d['num']] += v_cur.dot(dnow)
+                            jvp_REV[param_name][(t)*param_d['num']:(t+1) * param_d['num']] += vjped_dnow
+                # ========== NEWLY COMPUTED VJP ==========
+               
+                # continue
+
+                # # profile JVP for initial params
+                # for profile_output in self.profile_output_dict:
+                #     pd = self.profile_output_dict[profile_output]
+                #     v_cur = pd['v'][pd['num_single'] * (t):pd['num_single']*(t+1)]
+
+                #     for param_name in self.parameter_dict:
+                #         param_d = self.parameter_dict[param_name]
+                #         if param_d['fixed_input'] == True:
+                #             continue
+                #         dnow = P[profile_output][param_name].reshape(pd['num_single'], param_d['num'])
+                #         if param_d['dynamic'] == False:
+                #             if self.profile_outputs_system.system_type == 'NS':
+                #                 ptype = self.profile_outputs_system.partial_properties[profile_output][param_name]['type']
+                #                 if ptype == 'empty':
+                #                     continue
+                #                 elif ptype == 'std' or ptype == 'cs_uc':
+                #                     jvp_REV[param_name] += v_cur.dot(dnow)
+                #                 elif ptype == 'row_col' or ptype == 'row_col_val' or ptype == 'sparse':
+                #                     jvp_REV[param_name] += v_cur*(dnow)
+                #             if self.profile_outputs_system.system_type == 'OM':
+                #                 if sp.issparse(dnow):
+                #                     jvp_REV[param_name] += v_cur@(dnow)
+                #                 else:
+                #                     jvp_REV[param_name] += v_cur.dot(dnow)
+                #         else:
+                #             if self.profile_outputs_system.system_type == 'NS':
+                #                 ptype = self.profile_outputs_system.partial_properties[profile_output][param_name]['type']
+                #                 if ptype == 'empty':
+                #                     continue
+                #                 elif ptype == 'std' or ptype == 'cs_uc':
+                #                     jvp_REV[param_name][(t)*param_d['num']:(t+1) * param_d['num']] += v_cur.dot(dnow)
+                #                 elif ptype == 'row_col' or ptype == 'row_col_val' or ptype == 'sparse':
+                #                     jvp_REV[param_name][(t)*param_d['num']:(t+1) * param_d['num']] += v_cur*(dnow)
+                #             if self.profile_outputs_system.system_type == 'OM':
+                #                 if sp.issparse(dnow):
+                #                     jvp_REV[param_name][(t)*param_d['num']:(t+1) * param_d['num']] += v_cur@(dnow)
+                #                 else:
+                #                     jvp_REV[param_name][(t)*param_d['num']:(t+1) * param_d['num']] += v_cur.dot(dnow)
+                #                     # print(profile_output,param_name,v_cur.dot(dnow))
             else:
-                P = None
+                # P = None
+                Pd = None
 
             #  ----------------------------------------------------- PART C / PART B -----------------------------------------------------
             # ===UNCOMMENT FOR PROFILING===
@@ -1589,7 +1697,7 @@ class TimeMarching(IntegratorBase):
             # lp_wrapper(P, t, time_now_index, h)
             # lp.print_stats()
             # ===UNCOMMENT FOR PROFILING===
-            self.compute_JVP_psi_cb(P, t, time_now_index, h)
+            self.compute_JVP_psi_cb(Pd, t, time_now_index, h)
 
             #  ----------------------------------------------------- PART A -----------------------------------------------------
 
@@ -1602,7 +1710,7 @@ class TimeMarching(IntegratorBase):
                 # lp_wrapper(h)
                 # lp.print_stats()
                 # ===UNCOMMENT FOR PROFILING===
-                self.compute_JVP_psi_a_explicit(h)
+                self.compute_JVP_psi_a_explicit(h, time_now_index, rel_index)
 
             # DIRECT SOLVER (FOR IMPLICIT):
             elif self.implicit_solver_jvp == 'direct':
@@ -1784,11 +1892,10 @@ class TimeMarching(IntegratorBase):
             # PART A  -----------:
             for profile_key in self.profile_output_dict:
                 pd = self.profile_output_dict[profile_key]
-                dpds_temp = (P[profile_key][key].T)
+                dpds_temp = (P[profile_key][key].flatten())
 
-                # OLD: was reshaping instead of transposing
+                # OLD: was reshaping instead of transposing + vjp
                 # dpds_temp = (P[profile_key][key].reshape((sd['num'], pd['num_single'])))
-
 
                 v_current = pd['v'][pd['num_single'] * (t):pd['num_single']*(t+1)]
 
@@ -1800,19 +1907,46 @@ class TimeMarching(IntegratorBase):
                         continue
 
                     if ptype == 'std' or ptype == 'cs_uc':
-                        self.state_dict[key]['psi_tC'] += - \
-                            dpds_temp.dot(v_current)
+                        self.state_dict[key]['psi_tC'] += -dpds_temp
                     elif ptype == 'row_col' or ptype == 'row_col_val' or ptype == 'sparse':
-                        self.state_dict[key]['psi_tC'] += - \
-                            dpds_temp*(v_current)
+                        self.state_dict[key]['psi_tC'] += -dpds_temp
                 elif self.profile_outputs_system.system_type == 'OM':
-                    
                     if sp.issparse(dpds_temp):
-                        self.state_dict[key]['psi_tC'] += - \
-                            dpds_temp@(v_current)
+                        self.state_dict[key]['psi_tC'] += -dpds_temp
                     else:
-                        self.state_dict[key]['psi_tC'] += - \
-                            dpds_temp.dot(v_current)
+                        self.state_dict[key]['psi_tC'] += -dpds_temp
+
+
+                # # =================== FULL MATRIX INSTEAD OF VJP ===================:
+                # dpds_temp = (P[profile_key][key].T)
+
+                # # OLD: was reshaping instead of transposing
+                # # dpds_temp = (P[profile_key][key].reshape((sd['num'], pd['num_single'])))
+
+                # v_current = pd['v'][pd['num_single'] * (t):pd['num_single']*(t+1)]
+
+                # if self.profile_outputs_system.system_type == 'NS':
+                #     ptype = self.profile_outputs_system.partial_properties[
+                #         profile_key][key]['type']
+
+                #     if ptype == 'empty':
+                #         continue
+
+                #     if ptype == 'std' or ptype == 'cs_uc':
+                #         self.state_dict[key]['psi_tC'] += - \
+                #             dpds_temp.dot(v_current)
+                #     elif ptype == 'row_col' or ptype == 'row_col_val' or ptype == 'sparse':
+                #         self.state_dict[key]['psi_tC'] += - \
+                #             dpds_temp*(v_current)
+                # elif self.profile_outputs_system.system_type == 'OM':
+                    
+                #     if sp.issparse(dpds_temp):
+                #         self.state_dict[key]['psi_tC'] += - \
+                #             dpds_temp@(v_current)
+                #     else:
+                #         self.state_dict[key]['psi_tC'] += - \
+                #             dpds_temp.dot(v_current)
+                # # =================== FULL MATRIX INSTEAD OF VJP ===================:
 
             for field_key in self.field_output_dict:
                 if self.field_output_dict[field_key]['state_name'] == key:
@@ -2019,7 +2153,7 @@ class TimeMarching(IntegratorBase):
                 warnings.warn("iterative taking time to converge. An alternative is to use direct method: implicit_solver_jvp = 'direct'")
         # print('BGS ITER: ', FPI_iteration_num)
 
-    def compute_JVP_psi_a_explicit(self, h):
+    def compute_JVP_psi_a_explicit(self, h, time_now_index, rel_index):
         # Precompute h*A:
         for i in range(len(self.A_rows)):
             if i > 0:
@@ -2034,60 +2168,153 @@ class TimeMarching(IntegratorBase):
             sd['psi_tB_temp'] = []
             for inds in sd['psi_indices']:
                 sd['psi_tB_temp'].append(sd['psi_tB'][inds[0]:inds[1]])
-
+        
+        self.vjped_stages = {}
         for s_num in self.explicit_tools['rev_stage_iter']:
-            for s_wrt in self.state_dict:
+            for state_number, s_wrt in enumerate(self.state_dict):
                 sw = self.state_dict[s_wrt]
                 # Initialize
                 psi_current = np.zeros(sw['num'])
+                vjp_dict = {}
                 for s_of in self.state_dict:
                     so = self.state_dict[s_of]
+                    fname = so['f_name']
 
                     # Sum through stages
                     psi_temp = np.array(so['psi_tB_temp'][s_num])
                     for k in self.explicit_tools['stage_index_list'][s_num]:
                         psi_temp += (self.Ah[k][s_num]*so['psi_A_temp'][k])
-                    # print(type(psi_current))
+                    
+                    vjp_dict[fname] = psi_temp
+                # # :::::::::::::::::::::::::::::::::::::::::: START NEW (matrix-free) ::::::::::::::::::::::::::::::::::::::::::
+                # Set values for computing vjp
+                if state_number == 0:
+                    run_dict_cur = {}
 
-                    # Multiply with jacobian
-                    if self.OStype == 'NS':
-                        f_name = so['f_name']
-                        partialtype = self.ode_system.partial_properties[f_name][s_wrt]['type']
+                    # Set dynamic parameters:
+                    for key in self.parameter_dict:
+                        if self.parameter_dict[key]['dynamic'] == True:
+                            run_dict_cur[key] = self.parameter_dict[key]['val_nodal'][time_now_index][s_num].reshape(self.parameter_dict[key]['nn_shape_exp'])
 
-                        if partialtype == 'empty':
-                            continue
+                    # Set states:
+                    for key in self.state_dict:
+                        sd = self.state_dict[key]
+                        Y_current = (sd['A_kron']*h*sd['Y_evalcurrent'].reshape(sd['shape_stage']) + sd['U_kron']*(sd['y_storage'][:, rel_index-1])).reshape(sd['nn_shape'])
+                        run_dict_cur[key] = Y_current[s_num].reshape(sd['nn_shape_exp'])
+                    self.ode_system.set_vars(run_dict_cur)
+                    
+                    P = self.ode_system.run_model({}, [])
+                    Pd = self.ode_system.compute_total_derivatives(self.of_list, self.wrt_list, vjp = vjp_dict)
+                    # Pd_check = self.ode_system.compute_total_derivatives(self.of_list, self.wrt_list)
+                    # for key in Pd_check:
+                    #     for key2 in Pd_check[key]:
 
-                        if partialtype == 'row_col' or partialtype == 'row_col_val' or partialtype == 'sparse':
-                            psi_current += psi_temp*(so['Y_prime_current_T'][s_wrt][s_num])
-                            # print('s ', s_of, s_wrt, psi_temp, psi_current, so['Y_prime_current_T'][s_wrt][s_num])
+                    #         if sp.issparse(Pd_check[key][key2]):
+                    #             Pd_check[key][key2] = Pd_check[key][key2].toarray()
+                    #         print(key,key2, Pd_check[key][key2], Pd[key][key2])
 
-                        elif partialtype == 'std' or partialtype == 'cs_uc':
-                            # ------------Alternative method? should be slower but doesnt seem so with scalars atleast ------------
-                            # psi_current += (so['Y_prime_current_T'][s_wrt][s_num]).dot(so['psi_tB_temp'][s_num])
-                            # for k in self.explicit_tools['stage_index_list'][s_num]:
-                            #     psi_current += ((so['Y_prime_current_T'][s_wrt][s_num]).dot((self.Ah[k][s_num])*so['psi_A_temp'][k]))
-                            # ------------Alternative method------------------------------------------------------------------------
+                
+                    # self.vjped_stages[s_num] = Pd
 
-                            # Compute psi_current. With numpy, A_transpose.dot(x) = x.dot(A)
-                            # By using the RHS, we do not have to tranpose the jacobian which is much cheaper!
-                            # psi_current += (so['Y_prime_current_T'][s_wrt][s_num]).dot(psi_temp)
-                            psi_current += psi_temp.dot(so['Y_prime_current_T'][s_wrt][s_num])
-                            # print('d ', s_of, s_wrt, psi_temp, psi_current, so['Y_prime_current_T'][s_wrt][s_num])
+                    # Store param jac. very similar to fwd stage computation for explicit
+                                    # Now apply vjp
+                    # for s_of in self.state_dict:
+                    #     so = self.state_dict[s_of]
+                    #     f_name = so['f_name']
+                        
+                    #     for key_param in self.parameter_dict:
+                    #         pd = self.parameter_dict[key_param]
+                            
+                    #         vjped_deriv = Pd[f_name][s_wrt]
+                    #         if sp.issparse(vjped_deriv):
+                    #             vjped_deriv = vjped_deriv.toarray()
+                    #         PJac = vjped_deriv
+                    #         # PJac = Pd[f_name][key_param].reshape((sd['num'], pd['num']))
 
-                    elif self.OStype == 'OM':
-                        # print(psi_current, psi_temp.dot(so['Y_prime_current_T'][s_wrt][s_num]))
-                        # print()
-                        # print(type((so['Y_prime_current_T'][s_wrt][s_num])), s_of, s_wrt, s_num)
-                        # print(type(psi_temp))
-                        # print(type(psi_current))
-                        # print(((so['Y_prime_current_T'][s_wrt][s_num])).shape, s_of, s_wrt, s_num)
-                        # print((psi_temp).shape)
-                        # print((psi_current).shape)
+                    #         if not pd['dynamic']:
+                    #             if s_num == self.num_stages-1:
+                    #                 so['df_dp_current'][key_param] = PJac
+                    #                 continue
+                    #             so['df_dp_current'][key_param] = np.vstack((PJac,so['df_dp_current'][key_param]))
 
-                        if sp.issparse(so['Y_prime_current_T'][s_wrt][s_num]):
-                            psi_current += psi_temp@(so['Y_prime_current_T'][s_wrt][s_num])
-                        else:
-                            psi_current += psi_temp.dot(so['Y_prime_current_T'][s_wrt][s_num])
+                    #             # if sp.issparse(PJac):
+                    #             #     sd['df_dp_current'][key_param] = sp.vstack((sd['df_dp_current'][key_param], PJac))
+                    #             # else:
+                    #             #     sd['df_dp_current'][key_param] = np.vstack((sd['df_dp_current'][key_param], PJac))
+
+                    #         else:  # Dynamic
+                    #             if s_num == self.num_stages-1:
+                    #                 so['df_dp_current'][key_param] = PJac*self.GLM_C_minus[s_num][0]
+                    #                 so['df_dp_current+'][key_param] = PJac*self.GLM_C[s_num][0]
+                    #                 continue
+
+                    #             so['df_dp_current'][key_param] = np.vstack((PJac*self.GLM_C_minus[s_num][0], so['df_dp_current'][key_param]))
+                    #             so['df_dp_current+'][key_param] = np.vstack((PJac*self.GLM_C[s_num][0], so['df_dp_current+'][key_param]))
+                    #             # if sp.issparse(PJac):
+                    #             #     so['df_dp_current'][key_param] = sp.vstack((PJac*self.GLM_C_minus[s_num][0], so['df_dp_current'][key_param]))
+                    #             #     so['df_dp_current+'][key_param] = sp.vstack((PJac*self.GLM_C[s_num][0], so['df_dp_current+'][key_param]))
+                    #             # else:
+                    #                 # so['df_dp_current'][key_param] = np.vstack((PJac*self.GLM_C_minus[s_num][0], so['df_dp_current'][key_param]))
+                    #                 # so['df_dp_current+'][key_param] = np.vstack((PJac*self.GLM_C[s_num][0], so['df_dp_current+'][key_param]))
+                    #         # print(s_num, s_of, key_param, Pd_check[f_name][key_param])
+
+                # Now apply vjp
+                for s_of in self.state_dict:
+                    so = self.state_dict[s_of]
+                    fname = so['f_name']
+                    # psi_current += Pd[s_of][s_wrt].flatten()
+                    # print(Pd[fname][s_wrt].shape, type(Pd[fname][s_wrt]))
+                    vjped_deriv = Pd[fname][s_wrt]
+                    if sp.issparse(vjped_deriv):
+                        vjped_deriv = vjped_deriv.toarray()
+                    vjped_deriv = vjped_deriv.flatten()
+
+                    if sp.issparse(so['Y_prime_current_T'][s_wrt][s_num]):
+                        psi_current += vjped_deriv
+                    else:
+                        psi_current += vjped_deriv
+                # # :::::::::::::::::::::::::::::::::::::::::: END NEW (matrix-free) ::::::::::::::::::::::::::::::::::::::::::
+
+                    # # OLD (matrix multiplication):
+                    # # Multiply with jacobian
+                    # if self.OStype == 'NS':
+                    #     f_name = so['f_name']
+                    #     partialtype = self.ode_system.partial_properties[f_name][s_wrt]['type']
+
+                    #     if partialtype == 'empty':
+                    #         continue
+
+                    #     if partialtype == 'row_col' or partialtype == 'row_col_val' or partialtype == 'sparse':
+                    #         psi_current += psi_temp*(so['Y_prime_current_T'][s_wrt][s_num])
+                    #         # print('s ', s_of, s_wrt, psi_temp, psi_current, so['Y_prime_current_T'][s_wrt][s_num])
+
+                    #     elif partialtype == 'std' or partialtype == 'cs_uc':
+                    #         # ------------Alternative method? should be slower but doesnt seem so with scalars atleast ------------
+                    #         # psi_current += (so['Y_prime_current_T'][s_wrt][s_num]).dot(so['psi_tB_temp'][s_num])
+                    #         # for k in self.explicit_tools['stage_index_list'][s_num]:
+                    #         #     psi_current += ((so['Y_prime_current_T'][s_wrt][s_num]).dot((self.Ah[k][s_num])*so['psi_A_temp'][k]))
+                    #         # ------------Alternative method------------------------------------------------------------------------
+
+                    #         # Compute psi_current. With numpy, A_transpose.dot(x) = x.dot(A)
+                    #         # By using the RHS, we do not have to tranpose the jacobian which is much cheaper!
+                    #         # psi_current += (so['Y_prime_current_T'][s_wrt][s_num]).dot(psi_temp)
+                    #         psi_current += psi_temp.dot(so['Y_prime_current_T'][s_wrt][s_num])
+                    #         # print('d ', s_of, s_wrt, psi_temp, psi_current, so['Y_prime_current_T'][s_wrt][s_num])
+
+                    # elif self.OStype == 'OM':
+                    #     # print(psi_current, psi_temp.dot(so['Y_prime_current_T'][s_wrt][s_num]))
+                    #     # print()
+                    #     # print(type((so['Y_prime_current_T'][s_wrt][s_num])), s_of, s_wrt, s_num)
+                    #     # print(type(psi_temp))
+                    #     # print(type(psi_current))
+                    #     # print(((so['Y_prime_current_T'][s_wrt][s_num])).shape, s_of, s_wrt, s_num)
+                    #     # print((psi_temp).shape)
+                    #     # print((psi_current).shape)
+
+                    #     if sp.issparse(so['Y_prime_current_T'][s_wrt][s_num]):
+                    #         psi_current += psi_temp@(so['Y_prime_current_T'][s_wrt][s_num])
+                    #     else:
+                    #         psi_current += psi_temp.dot(so['Y_prime_current_T'][s_wrt][s_num])
 
                 # Store psi_A
                 sw['psi_A_temp'][s_num] = psi_current

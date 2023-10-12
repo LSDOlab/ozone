@@ -96,8 +96,7 @@ class RunModel(csdl.Model):
 
 
 # Simulator Object:
-# sim = python_csdl_backend.Simulator(RunModel(num_times=100), mode='rev')
-sim = python_csdl_backend.Simulator(RunModel(num_times=30), mode='rev', analytics=1)
+sim = python_csdl_backend.Simulator(RunModel(num_times=30), mode='rev')
 
 sim.run()
 po1 = sim['po1']

@@ -49,7 +49,7 @@ def check_derivs(dict):
 def check_output(output):
     # assert pytest.approx(output, rel=1e-4) == 2.80508725
     # assert pytest.approx(output, rel=1e-4) == 2.80503345
-    print(output['total'], type(output['total']))
+    # print(output['total'], type(output['total']))
     assert pytest.approx(output['total'], rel=1e-4) == 2.80611596
     assert pytest.approx(output['total2'], rel=1e-4) == 22.27526371713729
 
