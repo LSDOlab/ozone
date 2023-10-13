@@ -63,6 +63,7 @@ def get_settings_dict():
         'jvp_solver': 'iterative',
         'num_method': 'Trapezoidal',
         'benchmark': False,
+        'store_jacs': False,
         'numtimes': 31  # DO NOT CHANGE
     }
 

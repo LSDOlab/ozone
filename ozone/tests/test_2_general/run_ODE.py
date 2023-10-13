@@ -17,6 +17,7 @@ def run_ode(settings_dict):
     system_type = settings_dict['system']
     fwd_solver = settings_dict['fwd_solver']
     jvp_solver = settings_dict['jvp_solver']
+    store_jacs = settings_dict['store_jacs']
 
     # ODE problem CLASS
     class ODEProblemTest(ODEProblem):
@@ -131,7 +132,8 @@ def run_ode(settings_dict):
         display='default',
         visualization='None',
         implicit_solver_fwd=fwd_solver,
-        implicit_solver_jvp=jvp_solver)
+        implicit_solver_jvp=jvp_solver,
+        time_marching_store_jac=store_jacs)
 
     sim = python_csdl_backend.Simulator(RunModel(num_timesteps=nt), mode='rev')
     sim.run()

@@ -29,6 +29,16 @@ def test_CSDL_timemarching_explicit():
     check_output(checks['output'])
     check_derivs(checks['derivative_checks'])
 
+def test_CSDL_timemarching_explicit_store():
+    settings_dictionary = get_settings_dict()
+    settings_dictionary['approach'] = 'time-marching checkpointing'
+    settings_dictionary['system'] = 'CSDL'
+    settings_dictionary['num_method'] = 'RK4'
+    settings_dictionary['store_jacs'] = True
+
+    checks = run_ode(settings_dictionary)
+    check_output(checks['output'])
+    check_derivs(checks['derivative_checks'])
 
 # ================================= Functions =================================
 

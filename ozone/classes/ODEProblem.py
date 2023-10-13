@@ -17,6 +17,7 @@ class ODEProblem(object):
                  visualization=None,
                  dictionary_inputs=None,
                  num_checkpoints=None,
+                 time_marching_store_jac=False,
                  implicit_solver_jvp='direct',
                  implicit_solver_fwd='direct'):
         """
@@ -39,6 +40,9 @@ class ODEProblem(object):
             num_checkpoints: int
                 Number of checkpoints if time-marching with checkpoints are used. Not used if approach is time-marching, solver-based
                 or collocation
+            time_marching_store_jac: bool
+                If True, store Jacobian during the forward integration to reuse during derivatives.
+                This is applicable only for the 'time-marching' approach.
         """
         # Approach determines which integrator class to use
         self.approach = approach
@@ -53,7 +57,8 @@ class ODEProblem(object):
                                           visualization=visualization,
                                           num_checkpoints=num_checkpoints,
                                           implicit_solver_fwd=implicit_solver_fwd,
-                                          implicit_solver_jvp=implicit_solver_jvp)
+                                          implicit_solver_jvp=implicit_solver_jvp,
+                                          time_marching_store_jac = time_marching_store_jac)
         self.integrator.approach = approach
 
         # Set to true when user defines a profile output system in "setup"

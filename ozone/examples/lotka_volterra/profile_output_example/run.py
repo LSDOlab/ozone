@@ -84,7 +84,13 @@ class RunModel(csdl.Model):
         h = self.create_input('h', h_vec)
 
         # Create Model containing integrator
-        ODEProblem = ODEProblemTest('RK4', 'time-marching', num_times, display='default', visualization='None')
+        ODEProblem = ODEProblemTest(
+            'RK4',
+            'time-marching',
+            num_times,
+            display='default',
+            visualization='None',
+        )
         # ODEProblem = ODEProblemTest('RK4', 'solver-based', num_times, display='default', visualization='None')
 
         self.add(ODEProblem.create_solver_model(), 'subgroup')

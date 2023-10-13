@@ -20,7 +20,8 @@ class IntegratorBase(object):
                  visualization=None,
                  num_checkpoints=None,
                  implicit_solver_jvp='direct',
-                 implicit_solver_fwd='direct'):
+                 implicit_solver_fwd='direct',
+                 time_marching_store_jac = False):
         """
         Arguments should be called from ODEProblem class.
 
@@ -57,6 +58,11 @@ class IntegratorBase(object):
         # Get GLM Coefficients and explicit/implicit boolean for integration
         (self.GLM_A, self.GLM_B, self.GLM_U, self.GLM_V,
          self.explicit) = get_integration_method(self.method)
+
+        if self.explicit:
+            self.time_marching_store_jac = time_marching_store_jac
+        else:
+            self.time_marching_store_jac = True
 
         #  WHATISTHIS
         self.dt = 1e-7
