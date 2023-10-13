@@ -1,13 +1,16 @@
 
 class Wrap(object):
     # Wrap(ODESystem)
-    def __init__(self, system, backend):
+    def __init__(self, system, sim_args,  name):
         self.system = system
         self.system_type = 'OM'
+        self.name = name
+        self.sim_args = sim_args
 
-        self.backend = backend
-        if self.backend not in ['csdl_om',  'python_csdl_backend']:
-            raise ValueError(f'backend must be \'csdl_om\' or \'python_csdl_backend\'')
+        if 'name' not in self.sim_args:
+            self.sim_args['name'] = self.name
+
+        self.backend = 'python_csdl_backend'
 
         self.num_f_calls = 0
         self.num_vectorized_f_calls = 0
@@ -20,23 +23,13 @@ class Wrap(object):
         # Creates Problem Object
         self.num_nodes = num_param
 
-        if self.backend == 'csdl_om':
-            import csdl_om
-            from csdl import GraphRepresentation
-            if parameters is None:
-                sim = csdl_om.Simulator(GraphRepresentation(self.system(num_nodes=num_param)))
-            else:
-                sim = csdl_om.Simulator(GraphRepresentation(self.system(num_nodes=num_param, **parameters)))
+        import python_csdl_backend
+        if parameters is None:
+            sim = python_csdl_backend.Simulator(self.system(num_nodes=num_param), **self.sim_args)
+        else:
+            sim = python_csdl_backend.Simulator(self.system(num_nodes=num_param, **parameters), **self.sim_args)
 
-            self.problem = sim.executable
-        elif self.backend == 'python_csdl_backend':
-            import python_csdl_backend
-            if parameters is None:
-                sim = python_csdl_backend.Simulator(self.system(num_nodes=num_param))
-            else:
-                sim = python_csdl_backend.Simulator(self.system(num_nodes=num_param, **parameters))
-
-            self.problem = sim
+        self.problem = sim
 
     def run_model(self, input_dict, output_vals):
         # Runs model. Can also set variables if needed

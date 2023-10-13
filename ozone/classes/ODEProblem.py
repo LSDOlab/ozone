@@ -342,7 +342,7 @@ class ODEProblem(object):
         """
         self.integrator.ode_system.recorder = recorder
 
-    def set_ode_system(self, ode_system, backend='python_csdl_backend'):
+    def set_ode_system(self, ode_system, **kwargs):
         """
         Declare the ODE system. This method MUST be called in the setup method.
 
@@ -354,13 +354,13 @@ class ODEProblem(object):
 
         # if type(ode_system) == csdl.core.model._CompilerFrontEndMiddleEnd:
         if issubclass(ode_system, csdl.Model):
-            self.ode_system = Wrap(ode_system, backend)
+            self.ode_system = Wrap(ode_system, kwargs, name = 'ode_system')
         elif issubclass(ode_system, NativeSystem):
             self.ode_system = ode_system()
         else:
             raise TypeError('must be an uninstantiated CSDL Model or uninstantiated NativeSystem')
 
-    def set_profile_system(self, profile_system, backend='python_csdl_backend'):
+    def set_profile_system(self, profile_system, **kwargs):
         """
         Declare the Profile Output system. This method MUST be called in the setup method IF profile outputs are declared.
 
@@ -371,7 +371,7 @@ class ODEProblem(object):
         """
 
         if issubclass(profile_system, csdl.Model):
-            self.profile_outputs_system = Wrap(profile_system, backend)
+            self.profile_outputs_system = Wrap(profile_system, kwargs, name = 'profile_output_system')
         elif issubclass(profile_system, NativeSystem):
             self.profile_outputs_system = profile_system()
         else:
