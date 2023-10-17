@@ -1,4 +1,4 @@
-
+import numpy as np
 class Wrap(object):
     # Wrap(ODESystem)
     def __init__(self, system, sim_args,  name):
@@ -25,9 +25,9 @@ class Wrap(object):
 
         import python_csdl_backend
         if parameters is None:
-            sim = python_csdl_backend.Simulator(self.system(num_nodes=num_param), **self.sim_args)
+            sim = python_csdl_backend.Simulator(self.system(num_nodes=num_param),display_scripts=0, analytics=0, **self.sim_args)
         else:
-            sim = python_csdl_backend.Simulator(self.system(num_nodes=num_param, **parameters), **self.sim_args)
+            sim = python_csdl_backend.Simulator(self.system(num_nodes=num_param, **parameters),display_scripts=0, analytics=1, **self.sim_args)
 
         self.problem = sim
 
@@ -65,7 +65,25 @@ class Wrap(object):
         if vjp is None:
             return self.problem.compute_totals(of=in_of, wrt=in_wrt, return_format='dict')
         else:
-            return self.problem.compute_vector_jacobian_product(of_vectors=vjp, wrt=in_wrt,return_format='dict')
+            vjps_edited = self.problem.compute_vector_jacobian_product(of_vectors=vjp, wrt=in_wrt,return_format='dict')
+
+            used_wrts = set()
+            return_dict = {}
+            for of in in_of:
+                if of not in vjps_edited:
+                    return_dict[of] = {}
+
+                for wrt in in_wrt:
+                    if wrt not in return_dict[of]:
+                        if wrt not in used_wrts:
+                            used_wrts.add(wrt)
+                            return_dict[of][wrt] = vjps_edited[wrt]
+                        else:
+                            return_dict[of][wrt] = np.zeros((vjps_edited[wrt].shape))
+                    else:
+                        return_dict[of][wrt] = np.zeros((vjps_edited[wrt].shape))
+
+            return return_dict
 
     def set_vars(self, vars):
         # option to set variables
