@@ -120,6 +120,9 @@ class IntegratorBase(object):
         if self.profile_outputs_bool:
             self.PStype = self.profile_outputs_system.system_type
 
+            if len(self.profile_outputs) == 0:
+                raise ValueError('Profile output system was specified but no profile outputs defined')
+
             for state_name in self.state_dict:
                 if state_name not in self.output_state_list:
                     self.output_state_list.append(state_name)

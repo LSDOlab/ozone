@@ -38,9 +38,7 @@ class ODEProblemTest(ODEProblem):
 
         # To exposed variables, the profile output system is identical to the ODE model.
         # The integrator will automatically reuse the ODE model as the profile output if possible.
-        self.set_ode_system(ODESystemModel)
-        self.set_profile_system(ODESystemModel)
-
+        self.set_ode_system(ODESystemModel, use_as_profile_output_system=True)
 
 class ODESystemModel(csdl.Model):
     def initialize(self):
@@ -109,8 +107,8 @@ class RunModel(csdl.Model):
 
         # Create Model containing integrator
         ODEProblem = ODEProblemTest(
-            'ImplicitMidpoint',
-            'time-marching checkpointing',
+            'RK4',
+            'time-marching',
             num_times,
             display='default',
             visualization='None',

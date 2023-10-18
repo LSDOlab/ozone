@@ -103,8 +103,7 @@ def run_ode(settings_dict):
             ode_problem.add_state('y', 'dy_dt', initial_condition_name='y_0')
             ode_problem.add_state('x', 'dx_dt', initial_condition_name='x_0')
             ode_problem.add_times(step_vector='h')
-            ode_problem.set_ode_system(ode_system)
-            ode_problem.set_profile_system(ode_system)
+            ode_problem.set_ode_system(ode_system, use_as_profile_output_system=True)
             self.add(ode_problem.create_solver_model(), 'subgroup')
             
             # Intermediate variables:

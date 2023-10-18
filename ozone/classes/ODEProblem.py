@@ -342,7 +342,7 @@ class ODEProblem(object):
         """
         self.integrator.ode_system.recorder = recorder
 
-    def set_ode_system(self, ode_system, **kwargs):
+    def set_ode_system(self, ode_system, use_as_profile_output_system = False, **kwargs):
         """
         Declare the ODE system. This method MUST be called in the setup method.
 
@@ -359,6 +359,9 @@ class ODEProblem(object):
             self.ode_system = ode_system()
         else:
             raise TypeError('must be an uninstantiated CSDL Model or uninstantiated NativeSystem')
+
+        if use_as_profile_output_system:
+            self.set_profile_system(ode_system, **kwargs)
 
     def set_profile_system(self, profile_system, **kwargs):
         """
