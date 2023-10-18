@@ -19,15 +19,19 @@ class Wrap(object):
 
         self.recorder = None
 
+        # Tracker to see if model values are different than current values
+        # If not, we do not need to actually re-run model when run_model is called
+        self.needs_to_run = True
+
     def create(self, num_param, type, parameters=None):
         # Creates Problem Object
         self.num_nodes = num_param
 
         import python_csdl_backend
         if parameters is None:
-            sim = python_csdl_backend.Simulator(self.system(num_nodes=num_param),display_scripts=0, analytics=0, **self.sim_args)
+            sim = python_csdl_backend.Simulator(self.system(num_nodes=num_param), **self.sim_args)
         else:
-            sim = python_csdl_backend.Simulator(self.system(num_nodes=num_param, **parameters),display_scripts=0, analytics=1, **self.sim_args)
+            sim = python_csdl_backend.Simulator(self.system(num_nodes=num_param, **parameters),  **self.sim_args)
 
         self.problem = sim
 
@@ -41,12 +45,19 @@ class Wrap(object):
             self.recorder.record(save_dict, 'ozone')
 
         for key, value in input_dict.items():
+            if self.needs_to_run == False:
+                if not np.array_equal(self.problem[key], value):
+                    self.needs_to_run = True
+
             self.problem[key] = value
 
-        if self.backend == 'csdl_om':
-            self.problem.run_model()
-        else:
+        if self.needs_to_run:
             self.problem.run()
+            self.needs_to_run = False
+            # print('RAN PROBLEM')
+        else:
+            # print('AVOIDED RUN')
+            pass
 
         outputs = {}
         for key in output_vals:
@@ -88,7 +99,10 @@ class Wrap(object):
     def set_vars(self, vars):
         # option to set variables
         for key in vars:
-            # self.problem.set_val(key, vars[key])
+            if self.needs_to_run == False:
+                if not np.array_equal(self.problem[key], vars[key]):
+                    self.needs_to_run = True
+
             self.problem[key] = vars[key]
             # print('SET VARS:', key, self.problem[key], vars[key])
 

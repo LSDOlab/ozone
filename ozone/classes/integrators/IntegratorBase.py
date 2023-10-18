@@ -238,7 +238,16 @@ class IntegratorBase(object):
         self.ode_system.create(self.numnodes, 'O', parameters=ODE_parameters)
         self.ode_system.dt = self.dt
         if self.profile_outputs_bool == True:
-            self.profile_outputs_system.create(self.numnodes_p, 'P', parameters=profile_parameters)
+            
+            same_system = self.profile_outputs_system.system == self.ode_system.system
+            same_numnodes = numnodes == numnodes_p
+            same_params = profile_parameters == ODE_parameters
+            if same_system and same_numnodes and same_params:
+                self.profile_outputs_system = self.ode_system
+            else:
+                self.profile_outputs_system.create(self.numnodes_p, 'P', parameters=profile_parameters)
+
+            # self.profile_outputs_system.create(self.numnodes_p, 'P', parameters=profile_parameters)
 
         # Returns integrator system
         return self.get_solver_model()
