@@ -34,7 +34,7 @@ class Wrap(object):
             sim = python_csdl_backend.Simulator(self.system(num_nodes=num_param, **parameters),  **self.sim_args)
 
         self.problem = sim
-
+    
     def run_model(self, input_dict, output_vals):
         # Runs model. Can also set variables if needed
         self.num_vectorized_f_calls += 1
@@ -46,7 +46,7 @@ class Wrap(object):
 
         for key, value in input_dict.items():
             if self.needs_to_run == False:
-                if not np.array_equal(self.problem[key], value):
+                if not np.array_equal(self.problem[key].reshape(value.shape), value):
                     self.needs_to_run = True
 
             self.problem[key] = value
@@ -63,6 +63,12 @@ class Wrap(object):
         for key in output_vals:
             outputs[key] = self.problem[key]
         return outputs
+
+    def set_maps(
+            self,
+            maps
+        ):
+        pass
 
     def compute_total_derivatives(self, in_of, in_wrt, approach='TM', vjp = None):
 
@@ -100,17 +106,15 @@ class Wrap(object):
         # option to set variables
         for key in vars:
             if self.needs_to_run == False:
-                if not np.array_equal(self.problem[key], vars[key]):
+                if not np.array_equal(self.problem[key].reshape(vars[key].shape), vars[key]):
                     self.needs_to_run = True
+                    # print('SET VARS:', key, self.problem[key],vars[key])
 
             self.problem[key] = vars[key]
             # print('SET VARS:', key, self.problem[key], vars[key])
 
     def check_totals(self, in_of, in_wrt):
-        if self.backend == 'csdl_om':
-            self.problem.run_model()
-        else:
-            self.problem.run()
+        self.problem.run()
         self.problem.check_totals(of=in_of, wrt=in_wrt, compact_print=True)
 
     def get_recorder_data(self, var_names):

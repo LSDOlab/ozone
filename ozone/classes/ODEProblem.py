@@ -269,7 +269,12 @@ class ODEProblem(object):
         if state_name not in self.integrator.output_state_list:
             self.integrator.output_state_list.append(state_name)
 
-    def add_profile_output(self, profile_output_name, state_name=None, shape=1):
+    def add_profile_output(
+            self,
+            profile_output_name,
+            # output_name = None,
+            state_name=None,
+            shape=1):
         """
         define a profile output. If called, must be in the setup method. Further, a profile model must be declared using the
         set_profile_system method.
@@ -278,8 +283,10 @@ class ODEProblem(object):
         ----------
             profile_output_name: str
                 Name of field output to be used in downstream systems.
+            # output_name: str
+            #     Output name of the profile output in the outer model. If None, the output name is the same as the profile output name. 
             state_name: str
-                Name of corresponding state to take profile output of.
+                DEPRECATED
             shape: int or Tuple[int]
                 Shape of profile output at every timestep.
         """
@@ -297,6 +304,14 @@ class ODEProblem(object):
         self.integrator.profile_output_dict[profile_output_name]['num'] = np.prod(
             self.integrator.profile_output_dict[profile_output_name]['shape'])
         self.integrator.profile_output_dict[profile_output_name]['state_name'] = state_name
+
+        # if output_name is not None:
+        #     if not isinstance(output_name, str):
+        #         raise ValueError(f'connect_outer_name must be a string, {output_name} of type {type(output_name)} given')
+        #     self.integrator.profile_output_dict[profile_output_name]['map2outer'] = output_name
+        # else:
+        #     self.integrator.profile_output_dict[profile_output_name]['map2outer'] = profile_output_name
+
         self.integrator.profile_states.append(state_name)
         self.integrator.profile_outputs.append(profile_output_name)
         # if state_name not in self.integrator.output_state_list:

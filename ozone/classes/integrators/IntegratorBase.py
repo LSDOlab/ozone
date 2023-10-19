@@ -103,6 +103,10 @@ class IntegratorBase(object):
         else:
             self.ongoingplot = None
 
+        # True if parameters exist
+        self.rhs_name_maps = {'inner2outer': {}, 'outer2inner': {}}
+        self.profile_name_maps = {'inner2outer': {}, 'outer2inner': {}}
+
     def post_setup_init(self):
         """
         Performs tasks needed after "def setup".
@@ -239,6 +243,7 @@ class IntegratorBase(object):
 
         # Creating Problems
         self.ode_system.create(self.numnodes, 'O', parameters=ODE_parameters)
+        self.ode_system.set_maps(self.rhs_name_maps)
         self.ode_system.dt = self.dt
         if self.profile_outputs_bool == True:
             
@@ -249,7 +254,9 @@ class IntegratorBase(object):
                 self.profile_outputs_system = self.ode_system
             else:
                 self.profile_outputs_system.create(self.numnodes_p, 'P', parameters=profile_parameters)
-
+                # print('FAIL')
+                # exit()
+            self.profile_outputs_system.set_maps(self.profile_name_maps)
             # self.profile_outputs_system.create(self.numnodes_p, 'P', parameters=profile_parameters)
 
         # Returns integrator system
