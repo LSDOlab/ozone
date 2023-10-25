@@ -4,7 +4,7 @@
 # Same ODE Model as coupled problem. However, the four coefficients a,b,g,d are now csdl variables that can be connected from outside
 from ozone.api import ODEProblem
 import csdl
-import openmdao.api as om
+# import openmdao.api as om
 from ozone.api import Wrap, NativeSystem
 import python_csdl_backend
 import numpy as np

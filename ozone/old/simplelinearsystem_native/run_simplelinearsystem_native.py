@@ -1,4 +1,4 @@
-import openmdao.api as om
+# import openmdao.api as om
 import numpy as np
 from ozone.api import ODEProblem
 from SimplelinearsystemNative import ODESystem

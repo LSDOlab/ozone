@@ -2,7 +2,7 @@
 from modopt.csdl_library import CSDLProblem
 from modopt.scipy_library import SLSQP
 import matplotlib.pyplot as plt
-import openmdao.api as om
+# import openmdao.api as om
 from ode_systems import ODESystemNative, ODESystemModel
 from ozone.api import ODEProblem, NativeSystem
 import csdl

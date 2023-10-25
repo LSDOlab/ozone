@@ -3,7 +3,7 @@ from scipy.linalg import block_diag
 from ozone.api import NativeSystem
 from scipy import sparse as sp
 import matplotlib.pyplot as plt
-import openmdao.api as om
+# import openmdao.api as om
 from ozone.api import ODEProblem, NativeSystem
 import csdl
 import python_csdl_backend

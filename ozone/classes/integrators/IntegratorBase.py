@@ -1,7 +1,7 @@
 from ozone.classes.glm_matrices.GLMs import get_integration_method
 import matplotlib.pyplot as plt
 import numpy as np
-import openmdao.api as om
+# import openmdao.api as om
 import time
 import scipy.sparse as sp
 
