@@ -145,6 +145,6 @@ Integration methods are the first argument of the ODEProblem object and can be o
 
 Solver methods are the second argument of the ODEProblem object and can be one of the following:
 - 'time-marching': Compute the state sequentially through timesteps.
-- 'solver-based': Compute the state across timesteps in parallel
+- 'solver-based': Compute the state across timesteps in parallel (Picard iteration)
 - 'time-marching checkpointing': Same as time-marching but memory usage is reduced with the added cost of slower computation time
 - 'collocation': Solves for the state through an optimization problem
