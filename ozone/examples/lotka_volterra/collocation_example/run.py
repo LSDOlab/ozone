@@ -117,6 +117,7 @@ optimizer = SLSQP(prob)
 
 # Solve your optimization problem
 optimizer.solve()
+optimizer.print_results()
 
 # Visualize
 plt.plot(sim['x_solved'])

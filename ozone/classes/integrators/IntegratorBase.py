@@ -243,7 +243,7 @@ class IntegratorBase(object):
 
         # Creating Problems
         self.ode_system.create(self.numnodes, 'O', parameters=ODE_parameters)
-        self.ode_system.set_maps(self.rhs_name_maps)
+        # self.ode_system.set_maps(self.rhs_name_maps)
         self.ode_system.dt = self.dt
         if self.profile_outputs_bool == True:
             
@@ -256,7 +256,7 @@ class IntegratorBase(object):
                 self.profile_outputs_system.create(self.numnodes_p, 'P', parameters=profile_parameters)
                 # print('FAIL')
                 # exit()
-            self.profile_outputs_system.set_maps(self.profile_name_maps)
+            # self.profile_outputs_system.set_maps(self.profile_name_maps)
             # self.profile_outputs_system.create(self.numnodes_p, 'P', parameters=profile_parameters)
 
         # Returns integrator system

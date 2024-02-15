@@ -1092,7 +1092,7 @@ class TimeMarching(IntegratorBase):
             self.state_dict[key]['y_current'] = h*(sd['B_kron'] * sd['Yeval_current']) + sd['V_kron']*sd['y_previous']
         return
 
-    # COmpute JVP:
+    # Compute JVP (VJP):
     def compute_JVP_phase(self, d_inputs_in, d_outputs_in, t_start_index=0, t_end_index=None, checkpoints=False):
         # Record time of JVP calculation
         start_JVP = time.time()

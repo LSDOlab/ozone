@@ -64,11 +64,11 @@ class Wrap(object):
             outputs[key] = self.problem[key]
         return outputs
 
-    def set_maps(
-            self,
-            maps
-        ):
-        pass
+    # def set_maps(
+    #         self,
+    #         maps
+    #     ):
+    #     pass
 
     def compute_total_derivatives(self, in_of, in_wrt, approach='TM', vjp = None):
 
@@ -83,24 +83,27 @@ class Wrap(object):
             return self.problem.compute_totals(of=in_of, wrt=in_wrt, return_format='dict')
         else:
             vjps_edited = self.problem.compute_vector_jacobian_product(of_vectors=vjp, wrt=in_wrt,return_format='dict')
+            
+            if approach == 'TM':
+                used_wrts = set()
+                return_dict = {}
+                for of in in_of:
+                    if of not in vjps_edited:
+                        return_dict[of] = {}
 
-            used_wrts = set()
-            return_dict = {}
-            for of in in_of:
-                if of not in vjps_edited:
-                    return_dict[of] = {}
-
-                for wrt in in_wrt:
-                    if wrt not in return_dict[of]:
-                        if wrt not in used_wrts:
-                            used_wrts.add(wrt)
-                            return_dict[of][wrt] = vjps_edited[wrt]
+                    for wrt in in_wrt:
+                        if wrt not in return_dict[of]:
+                            if wrt not in used_wrts:
+                                used_wrts.add(wrt)
+                                return_dict[of][wrt] = vjps_edited[wrt]
+                            else:
+                                return_dict[of][wrt] = np.zeros((vjps_edited[wrt].shape))
                         else:
                             return_dict[of][wrt] = np.zeros((vjps_edited[wrt].shape))
-                    else:
-                        return_dict[of][wrt] = np.zeros((vjps_edited[wrt].shape))
 
-            return return_dict
+                return return_dict
+            else: # This else statement shouldn't ever be called until ODEComp is fixed.
+                return vjps_edited
 
     def set_vars(self, vars):
         # option to set variables

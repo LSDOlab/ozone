@@ -131,5 +131,6 @@ print(sim['exposed_iv1'])
 print(sim['exposed_iv2'])
 
 # Compute derivatives
-sim.compute_totals(of=['exposed_iv1', 'exposed_iv2', 'solved_y'], wrt=['y_0', 'x_0', 'h', 'a', 'b', 'g', 'd'])
-# sim.check_totals(of=['exposed_iv1', 'exposed_iv2', 'solved_y'], wrt=['y_0', 'x_0', 'h', 'a', 'b', 'g', 'd'], compact_print=True)
+derivatives = sim.compute_totals(of=['exposed_iv1', 'exposed_iv2', 'solved_y'], wrt=['y_0', 'x_0', 'h', 'a', 'b', 'g', 'd'])
+for pair in derivatives:
+    print(f'norm of {pair} derivatives:\t{np.linalg.norm(derivatives[pair])}')

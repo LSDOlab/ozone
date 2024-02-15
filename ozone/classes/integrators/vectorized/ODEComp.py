@@ -113,6 +113,33 @@ class ODEComp(csdl.CustomExplicitOperation):
                 proxy_name = self.parameter_dict[wrt_real]['proxy_name']
                 partials[stage_f_name, proxy_name] = D[f_key][wrt_real]
 
+    # Trying to get VJPs working for vectorized approaches:
+    # - We need a way to specify whether to use compute_jac_vec or compute derivatives.
+    # - For Picard iteration, we don't want to use compute jacvec product
+    # def compute_jacvec_product(self, inputs, d_inputs, d_outputs, mode):
+    #     if mode == 'rev':
+    #         # raise NotImplementedError('Forward mode not implemented')
+    #         d_out_temp = {}
+    #         for key in self.output_list:
+    #             temp = self.stage_f_dict[key]['res_name']
+    #             d_out_temp[key] = d_outputs[temp]
+    #         d_inputs_t = self.ode_system.compute_total_derivatives(self.output_list, self.input_list, vjp = d_out_temp, approach='SB')
+    #         # print('d_inputs_t', d_inputs_t.keys())
+    #         # print('inputs_list', d_inputs.keys())
+
+    #         for key in d_inputs_t.keys():
+    #             if key in self.parameter_dict:
+    #                 proxy_name = self.parameter_dict[key]['proxy_name']
+    #             elif key in self.state_dict:
+    #                 proxy_name = self.state_dict[key]['stage_name']
+    #                 # print(stage_name.keys())
+    #                 # proxy_name = self.stage_dict[stage_name]['state_name']
+    #             else:
+    #                 raise NotImplementedError(f'cannot find key {key}')
+    #             d_inputs[proxy_name] = d_inputs_t[key]
+    #     else:
+    #         raise NotImplementedError('Forward mode not implemented')
+
     def set_odesys(self, ode_sys):
         self.ode_system = ode_sys
 
