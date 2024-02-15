@@ -96,13 +96,12 @@ class RunModel(csdl.Model):
 
 
 # Simulator object:
-sim = python_csdl_backend.Simulator(RunModel(num_times=31), mode='rev')
+sim = python_csdl_backend.Simulator(RunModel(num_times=31))
 
 # Run and check derivatives
-sim.prob.run_model()
-# sim.visualize_implementation()
-print('y integrated:', sim.prob['y_integrated'])
-sim.prob.check_totals(of=['y_integrated'], wrt=['y_0'], compact_print=True)
+sim.run()
+sim.check_totals(of=['y_integrated'], wrt=['y_0'], compact_print=True)
+print('state integrated:', sim['y_integrated'])
 ```
 
 Installation
