@@ -5,8 +5,8 @@ import csdl_om
 import python_csdl_backend
 import numpy as np
 import modopt
-from modopt.scipy_library import SLSQP
-from modopt.csdl_library import CSDLProblem
+from modopt import SLSQP
+from modopt import CSDLProblem
 import time
 # from pendulum_dashboard import SampleDash
 

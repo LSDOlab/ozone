@@ -126,8 +126,8 @@ def run_ode(settings_dict):
     sim = python_csdl_backend.Simulator(rep, mode='rev')
     sim.run()
     if approach_test == 'collocation':
-        from modopt.scipy_library import SLSQP
-        from modopt.csdl_library import CSDLProblem
+        from modopt import SLSQP
+        from modopt import CSDLProblem
         prob = CSDLProblem(
             problem_name='test_3',
             simulator=sim,
