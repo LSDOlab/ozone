@@ -1,7 +1,6 @@
 from ozone.classes.glm_matrices.GLMs import get_integration_method
 import matplotlib.pyplot as plt
 import numpy as np
-# import openmdao.api as om
 import time
 import scipy.sparse as sp
 
@@ -20,7 +19,8 @@ class IntegratorBase(object):
                  visualization=None,
                  num_checkpoints=None,
                  implicit_solver_jvp='direct',
-                 implicit_solver_fwd='direct'):
+                 implicit_solver_fwd='direct',
+                 time_marching_store_jac = False):
         """
         Arguments should be called from ODEProblem class.
 
@@ -57,6 +57,11 @@ class IntegratorBase(object):
         # Get GLM Coefficients and explicit/implicit boolean for integration
         (self.GLM_A, self.GLM_B, self.GLM_U, self.GLM_V,
          self.explicit) = get_integration_method(self.method)
+
+        if self.explicit:
+            self.time_marching_store_jac = time_marching_store_jac
+        else:
+            self.time_marching_store_jac = True
 
         #  WHATISTHIS
         self.dt = 1e-7
@@ -97,6 +102,10 @@ class IntegratorBase(object):
         else:
             self.ongoingplot = None
 
+        # True if parameters exist
+        self.rhs_name_maps = {'inner2outer': {}, 'outer2inner': {}}
+        self.profile_name_maps = {'inner2outer': {}, 'outer2inner': {}}
+
     def post_setup_init(self):
         """
         Performs tasks needed after "def setup".
@@ -113,6 +122,9 @@ class IntegratorBase(object):
         self.OStype = self.ode_system.system_type
         if self.profile_outputs_bool:
             self.PStype = self.profile_outputs_system.system_type
+
+            if len(self.profile_outputs) == 0:
+                raise ValueError('Profile output system was specified but no profile outputs defined')
 
             for state_name in self.state_dict:
                 if state_name not in self.output_state_list:
@@ -230,9 +242,21 @@ class IntegratorBase(object):
 
         # Creating Problems
         self.ode_system.create(self.numnodes, 'O', parameters=ODE_parameters)
+        # self.ode_system.set_maps(self.rhs_name_maps)
         self.ode_system.dt = self.dt
         if self.profile_outputs_bool == True:
-            self.profile_outputs_system.create(self.numnodes_p, 'P', parameters=profile_parameters)
+            
+            same_system = self.profile_outputs_system.system == self.ode_system.system
+            same_numnodes = numnodes == numnodes_p
+            same_params = profile_parameters == ODE_parameters
+            if same_system and same_numnodes and same_params:
+                self.profile_outputs_system = self.ode_system
+            else:
+                self.profile_outputs_system.create(self.numnodes_p, 'P', parameters=profile_parameters)
+                # print('FAIL')
+                # exit()
+            # self.profile_outputs_system.set_maps(self.profile_name_maps)
+            # self.profile_outputs_system.create(self.numnodes_p, 'P', parameters=profile_parameters)
 
         # Returns integrator system
         return self.get_solver_model()

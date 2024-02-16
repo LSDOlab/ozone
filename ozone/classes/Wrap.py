@@ -1,13 +1,16 @@
-
+import numpy as np
 class Wrap(object):
     # Wrap(ODESystem)
-    def __init__(self, system, backend):
+    def __init__(self, system, sim_args,  name):
         self.system = system
         self.system_type = 'OM'
+        self.name = name
+        self.sim_args = sim_args
 
-        self.backend = backend
-        if self.backend not in ['csdl_om',  'python_csdl_backend']:
-            raise ValueError(f'backend must be \'csdl_om\' or \'python_csdl_backend\'')
+        if 'name' not in self.sim_args:
+            self.sim_args['name'] = self.name
+
+        self.backend = 'python_csdl_backend'
 
         self.num_f_calls = 0
         self.num_vectorized_f_calls = 0
@@ -16,28 +19,22 @@ class Wrap(object):
 
         self.recorder = None
 
+        # Tracker to see if model values are different than current values
+        # If not, we do not need to actually re-run model when run_model is called
+        self.needs_to_run = True
+
     def create(self, num_param, type, parameters=None):
         # Creates Problem Object
         self.num_nodes = num_param
 
-        if self.backend == 'csdl_om':
-            import csdl_om
-            from csdl import GraphRepresentation
-            if parameters is None:
-                sim = csdl_om.Simulator(GraphRepresentation(self.system(num_nodes=num_param)))
-            else:
-                sim = csdl_om.Simulator(GraphRepresentation(self.system(num_nodes=num_param, **parameters)))
+        import python_csdl_backend
+        if parameters is None:
+            sim = python_csdl_backend.Simulator(self.system(num_nodes=num_param), **self.sim_args)
+        else:
+            sim = python_csdl_backend.Simulator(self.system(num_nodes=num_param, **parameters),  **self.sim_args)
 
-            self.problem = sim.executable
-        elif self.backend == 'python_csdl_backend':
-            import python_csdl_backend
-            if parameters is None:
-                sim = python_csdl_backend.Simulator(self.system(num_nodes=num_param))
-            else:
-                sim = python_csdl_backend.Simulator(self.system(num_nodes=num_param, **parameters))
-
-            self.problem = sim
-
+        self.problem = sim
+    
     def run_model(self, input_dict, output_vals):
         # Runs model. Can also set variables if needed
         self.num_vectorized_f_calls += 1
@@ -48,19 +45,32 @@ class Wrap(object):
             self.recorder.record(save_dict, 'ozone')
 
         for key, value in input_dict.items():
+            if self.needs_to_run == False:
+                if not np.array_equal(self.problem[key].reshape(value.shape), value):
+                    self.needs_to_run = True
+
             self.problem[key] = value
 
-        if self.backend == 'csdl_om':
-            self.problem.run_model()
-        else:
+        if self.needs_to_run:
             self.problem.run()
+            self.needs_to_run = False
+            # print('RAN PROBLEM')
+        else:
+            # print('AVOIDED RUN')
+            pass
 
         outputs = {}
         for key in output_vals:
             outputs[key] = self.problem[key]
         return outputs
 
-    def compute_total_derivatives(self, in_of, in_wrt, approach='TM'):
+    # def set_maps(
+    #         self,
+    #         maps
+    #     ):
+    #     pass
+
+    def compute_total_derivatives(self, in_of, in_wrt, approach='TM', vjp = None):
 
         self.num_df_calls += self.num_nodes
         self.num_vectorized_df_calls += 1
@@ -69,23 +79,45 @@ class Wrap(object):
             self.recorder.record(save_dict, 'ozone')
 
         # Computes Derivatives
-        if approach == 'TM':
+        if vjp is None:
             return self.problem.compute_totals(of=in_of, wrt=in_wrt, return_format='dict')
-        elif approach == 'SB':
-            return self.problem.compute_totals(of=in_of, wrt=in_wrt, return_format='dict')
+        else:
+            vjps_edited = self.problem.compute_vector_jacobian_product(of_vectors=vjp, wrt=in_wrt,return_format='dict')
+            
+            if approach == 'TM':
+                used_wrts = set()
+                return_dict = {}
+                for of in in_of:
+                    if of not in vjps_edited:
+                        return_dict[of] = {}
+
+                    for wrt in in_wrt:
+                        if wrt not in return_dict[of]:
+                            if wrt not in used_wrts:
+                                used_wrts.add(wrt)
+                                return_dict[of][wrt] = vjps_edited[wrt]
+                            else:
+                                return_dict[of][wrt] = np.zeros((vjps_edited[wrt].shape))
+                        else:
+                            return_dict[of][wrt] = np.zeros((vjps_edited[wrt].shape))
+
+                return return_dict
+            else: # This else statement shouldn't ever be called until ODEComp is fixed.
+                return vjps_edited
 
     def set_vars(self, vars):
         # option to set variables
         for key in vars:
-            # self.problem.set_val(key, vars[key])
+            if self.needs_to_run == False:
+                if not np.array_equal(self.problem[key].reshape(vars[key].shape), vars[key]):
+                    self.needs_to_run = True
+                    # print('SET VARS:', key, self.problem[key],vars[key])
+
             self.problem[key] = vars[key]
             # print('SET VARS:', key, self.problem[key], vars[key])
 
     def check_totals(self, in_of, in_wrt):
-        if self.backend == 'csdl_om':
-            self.problem.run_model()
-        else:
-            self.problem.run()
+        self.problem.run()
         self.problem.check_totals(of=in_of, wrt=in_wrt, compact_print=True)
 
     def get_recorder_data(self, var_names):

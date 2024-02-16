@@ -28,7 +28,6 @@ With the problem defined, let's see how to implement this in `ozone`:
 
 ```py
 import matplotlib.pyplot as plt
-# import openmdao.api as om
 from ozone.api import ODEProblem
 import csdl
 import python_csdl_backend

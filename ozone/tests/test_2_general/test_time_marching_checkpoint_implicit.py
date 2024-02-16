@@ -103,6 +103,18 @@ def test_CSDL_timemarching_jvp_fwd_direct():
     check_output(checks['output'])
     check_derivs(checks['derivative_checks'])
 
+def test_CSDL_timemarching_jvp_fwd_direct_store():
+    settings_dictionary = get_settings_dict()
+    settings_dictionary['approach'] = 'time-marching checkpointing'
+    settings_dictionary['jvp_solver'] = 'direct'
+    settings_dictionary['fwd_solver'] = 'direct'
+    settings_dictionary['system'] = 'CSDL'
+    settings_dictionary['store_jacs'] = True
+
+    checks = run_ode(settings_dictionary)
+    check_output(checks['output'])
+    check_derivs(checks['derivative_checks'])
+
 
 if __name__ == '__main__':
     print('--------------------------------------------------IMPLICIT--------------------------------------------------')

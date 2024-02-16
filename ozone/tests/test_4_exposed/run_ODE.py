@@ -4,8 +4,36 @@ from ozone.api import NativeSystem, ODEProblem
 import csdl
 import python_csdl_backend
 import numpy as np
-from ozone.tests.test_1_simple.run_ODE_systems import ODESystemNative, ODESystemCSDL
 
+class ODESystemModel(csdl.Model):
+    def initialize(self):
+        # Required every time for ODE systems or Profile Output systems
+        self.parameters.declare('num_nodes')
+
+    def define(self):
+        # Input: state
+        n = self.parameters['num_nodes']
+
+        y = self.declare_variable('y', shape=n)
+        x = self.declare_variable('x', shape=n)
+
+        # Paramters are now inputs
+        a = self.declare_variable('a', shape=(n))
+        b = self.declare_variable('b', shape=(n))
+        g = self.declare_variable('g', shape=(n))
+        d = self.declare_variable('d')
+
+        # Predator Prey ODE:
+        iv1 = self.register_output('intermediate_variable_1', x*y) # intermediate variable exposed as output
+        dy_dt = a*y - b*iv1
+        dx_dt = g*iv1 - csdl.expand(d, n)*x
+
+
+        iv2 = self.register_output('intermediate_variable_2', (dy_dt + y + x + a)**2.0) # intermediate variable exposed as output
+
+        # Register output
+        self.register_output('dy_dt', dy_dt)
+        self.register_output('dx_dt', dx_dt)
 
 def run_ode(settings_dict):
 
@@ -26,12 +54,32 @@ def run_ode(settings_dict):
         def define(self):
             num_times = self.parameters['num_timesteps']
 
-            h_stepsize = 0.01
+            h_stepsize = 0.005
 
-            # Initial condition for state
-            self.create_input('y_0', 0.5)
+            coeffs = self.create_input('coefficients', np.ones(num_times)/(num_times))
+            y_0 = self.create_input('y_0', 2.0)
+            x_0 = self.create_input('x_0', 2.0)
+
+            # Create parameter for parameters a,b,g,d
+            a = np.zeros((num_times, ))
+            b = np.zeros((num_times, ))
+            g = np.zeros((num_times, ))
+            d = 0.5  # static parameter
+            for t in range(num_times):
+                a[t] = 1.0 + t/num_times/5.0
+                b[t] = 0.5 + t/num_times/5.0
+                g[t] = 2.0 + t/num_times/5.0 
+
+            # Add to csdl model which are fed into ODE Model
+            ai = self.create_input('a', a)
+            bi = self.create_input('b', b)
+            gi = self.create_input('g', g)
+            di = self.create_input('d', d)
+
+            # Timestep vector
             h_vec = np.ones(num_times-1)*h_stepsize
-            self.create_input('h', h_vec)
+            h = self.create_input('h', h_vec)
+            ode_system = ODESystemModel  # CSDL
 
             # Create Model containing integrator
             ode_problem = ODEProblem(
@@ -44,22 +92,26 @@ def run_ode(settings_dict):
                 implicit_solver_jvp=jvp_solver,
             )
 
-            ode_problem.add_state('y', 'dy_dt', initial_condition_name='y_0', output='y_integrated')
-            ode_problem.add_times(step_vector='h')
-
             # ODE
-            if system_type == 'CSDL':
-                ode_system = ODESystemCSDL  # CSDL
-            elif system_type == 'NSstd':
-                ode_system = ODESystemNative  # NATIVE
+            ode_problem.add_profile_output('intermediate_variable_1')
+            ode_problem.add_profile_output('intermediate_variable_2')
+            ode_problem.add_parameter('a', dynamic=True, shape=(num_times))
+            ode_problem.add_parameter('b', dynamic=True, shape=(num_times))
+            ode_problem.add_parameter('g', dynamic=True, shape=(num_times))
+            ode_problem.add_parameter('d')
+            ode_problem.add_state('y', 'dy_dt', initial_condition_name='y_0')
+            ode_problem.add_state('x', 'dx_dt', initial_condition_name='x_0')
+            ode_problem.add_times(step_vector='h')
+            ode_problem.set_ode_system(ode_system, use_as_profile_output_system=True)
+            self.add(ode_problem.create_solver_model(), 'subgroup')
+            
+            # Intermediate variables:
+            po1 = self.declare_variable('intermediate_variable_1', shape=(num_times, 1)) # intermediate variables now exposed to the outer model
+            po2 = self.declare_variable('intermediate_variable_2', shape=(num_times, 1)) # intermediate variables now exposed to the outer model
+            self.register_output('exposed_iv1', po1*1.0)
+            self.register_output('exposed_iv2', po2*1.0)
 
-            ode_problem.set_ode_system(ode_system)
-
-            self.add(ode_problem.create_solver_model())
-
-            y_out = self.declare_variable('y_integrated', shape=(nt,))
-
-            self.register_output('y_out', csdl.sum(y_out))
+            self.register_output('out', csdl.pnorm(po1+po2))
 
             if approach_test == 'collocation':
                 dummy_input = self.create_input('dummy_input')
@@ -73,7 +125,6 @@ def run_ode(settings_dict):
     rep = csdl.GraphRepresentation(model)
     sim = python_csdl_backend.Simulator(rep, mode='rev')
     sim.run()
-
     if approach_test == 'collocation':
         from modopt import SLSQP
         from modopt import CSDLProblem
@@ -87,17 +138,24 @@ def run_ode(settings_dict):
         # Solve your optimization problem
         optimizer.solve()
 
-    val = sim['y_out']
-    print('y_out: ', val)
+    vals = {
+        'out': sim['out'],
+    }
+    print(sim['out'])
+    # exit()
+    derivative_checks = sim.check_totals(of=['out'], wrt=['a', 'b', 'g','d','y_0','x_0'])
 
-    derivative_checks = sim.compute_totals(of=['y_out'], wrt=['y_0', 'h'])
+    sim.assert_check_partials(derivative_checks)
+    derivative_checks = sim.compute_totals(of=['out'], wrt=['a', 'b', 'g','d','y_0','x_0'])
     for key in derivative_checks:
         print('derivative norm:', key, np.linalg.norm(derivative_checks[key]))
-    # sim.check_partials(compact_print=1)
+    # exit()
+    # sim.check_totals(of =['y_out'], wrt = ['y_0', 'h'],compact_print=1)
+    # exit()
     # sim.check_totals(of=['stage__y', 'state__dy_dt'], wrt='y_0')
 
     # exit()
-    return_dict = {'output': val, 'derivative_checks': derivative_checks}
+    return_dict = {'output': vals, 'derivative_checks': derivative_checks}
 
     if settings_dict['benchmark']:
 

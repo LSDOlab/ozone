@@ -17,6 +17,7 @@ class ODEProblem(object):
                  visualization=None,
                  dictionary_inputs=None,
                  num_checkpoints=None,
+                 time_marching_store_jac=False,
                  implicit_solver_jvp='direct',
                  implicit_solver_fwd='direct'):
         """
@@ -39,6 +40,9 @@ class ODEProblem(object):
             num_checkpoints: int
                 Number of checkpoints if time-marching with checkpoints are used. Not used if approach is time-marching, solver-based
                 or collocation
+            time_marching_store_jac: bool
+                If True, store Jacobian during the forward integration to reuse during derivatives.
+                This is applicable only for the 'time-marching' approach.
         """
         # Approach determines which integrator class to use
         self.approach = approach
@@ -53,7 +57,8 @@ class ODEProblem(object):
                                           visualization=visualization,
                                           num_checkpoints=num_checkpoints,
                                           implicit_solver_fwd=implicit_solver_fwd,
-                                          implicit_solver_jvp=implicit_solver_jvp)
+                                          implicit_solver_jvp=implicit_solver_jvp,
+                                          time_marching_store_jac = time_marching_store_jac)
         self.integrator.approach = approach
 
         # Set to true when user defines a profile output system in "setup"
@@ -264,7 +269,12 @@ class ODEProblem(object):
         if state_name not in self.integrator.output_state_list:
             self.integrator.output_state_list.append(state_name)
 
-    def add_profile_output(self, profile_output_name, state_name=None, shape=1):
+    def add_profile_output(
+            self,
+            profile_output_name,
+            # output_name = None,
+            state_name=None,
+            shape=1):
         """
         define a profile output. If called, must be in the setup method. Further, a profile model must be declared using the
         set_profile_system method.
@@ -273,8 +283,10 @@ class ODEProblem(object):
         ----------
             profile_output_name: str
                 Name of field output to be used in downstream systems.
+            # output_name: str
+            #     Output name of the profile output in the outer model. If None, the output name is the same as the profile output name. 
             state_name: str
-                Name of corresponding state to take profile output of.
+                DEPRECATED
             shape: int or Tuple[int]
                 Shape of profile output at every timestep.
         """
@@ -292,6 +304,14 @@ class ODEProblem(object):
         self.integrator.profile_output_dict[profile_output_name]['num'] = np.prod(
             self.integrator.profile_output_dict[profile_output_name]['shape'])
         self.integrator.profile_output_dict[profile_output_name]['state_name'] = state_name
+
+        # if output_name is not None:
+        #     if not isinstance(output_name, str):
+        #         raise ValueError(f'connect_outer_name must be a string, {output_name} of type {type(output_name)} given')
+        #     self.integrator.profile_output_dict[profile_output_name]['map2outer'] = output_name
+        # else:
+        #     self.integrator.profile_output_dict[profile_output_name]['map2outer'] = profile_output_name
+
         self.integrator.profile_states.append(state_name)
         self.integrator.profile_outputs.append(profile_output_name)
         # if state_name not in self.integrator.output_state_list:
@@ -337,7 +357,7 @@ class ODEProblem(object):
         """
         self.integrator.ode_system.recorder = recorder
 
-    def set_ode_system(self, ode_system, backend='python_csdl_backend'):
+    def set_ode_system(self, ode_system, use_as_profile_output_system = False, **kwargs):
         """
         Declare the ODE system. This method MUST be called in the setup method.
 
@@ -349,13 +369,16 @@ class ODEProblem(object):
 
         # if type(ode_system) == csdl.core.model._CompilerFrontEndMiddleEnd:
         if issubclass(ode_system, csdl.Model):
-            self.ode_system = Wrap(ode_system, backend)
+            self.ode_system = Wrap(ode_system, kwargs, name = 'ode_system')
         elif issubclass(ode_system, NativeSystem):
             self.ode_system = ode_system()
         else:
             raise TypeError('must be an uninstantiated CSDL Model or uninstantiated NativeSystem')
 
-    def set_profile_system(self, profile_system, backend='python_csdl_backend'):
+        if use_as_profile_output_system:
+            self.set_profile_system(ode_system, **kwargs)
+
+    def set_profile_system(self, profile_system, **kwargs):
         """
         Declare the Profile Output system. This method MUST be called in the setup method IF profile outputs are declared.
 
@@ -366,7 +389,7 @@ class ODEProblem(object):
         """
 
         if issubclass(profile_system, csdl.Model):
-            self.profile_outputs_system = Wrap(profile_system, backend)
+            self.profile_outputs_system = Wrap(profile_system, kwargs, name = 'profile_output_system')
         elif issubclass(profile_system, NativeSystem):
             self.profile_outputs_system = profile_system()
         else:

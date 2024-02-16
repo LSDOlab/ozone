@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 # import openmdao.api as om
+=======
+>>>>>>> dev_vjp
 import numpy as np
 from ozone.api import ODEProblem, Wrap
 import matplotlib.pyplot as plt

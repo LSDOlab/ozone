@@ -96,13 +96,12 @@ class RunModel(csdl.Model):
 
 
 # Simulator object:
-sim = python_csdl_backend.Simulator(RunModel(num_times=31), mode='rev')
+sim = python_csdl_backend.Simulator(RunModel(num_times=31))
 
 # Run and check derivatives
-sim.prob.run_model()
-# sim.visualize_implementation()
-print('y integrated:', sim.prob['y_integrated'])
-sim.prob.check_totals(of=['y_integrated'], wrt=['y_0'], compact_print=True)
+sim.run()
+sim.check_totals(of=['y_integrated'], wrt=['y_0'], compact_print=True)
+print('state integrated:', sim['y_integrated'])
 ```
 
 Installation
@@ -146,6 +145,6 @@ Integration methods are the first argument of the ODEProblem object and can be o
 
 Solver methods are the second argument of the ODEProblem object and can be one of the following:
 - 'time-marching': Compute the state sequentially through timesteps.
-- 'solver-based': Compute the state across timesteps in parallel
+- 'solver-based': Compute the state across timesteps in parallel (Picard iteration)
 - 'time-marching checkpointing': Same as time-marching but memory usage is reduced with the added cost of slower computation time
 - 'collocation': Solves for the state through an optimization problem

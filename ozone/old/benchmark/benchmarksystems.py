@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 # import openmdao.api as om
+=======
+>>>>>>> dev_vjp
 import numpy as np
 import scipy.sparse as sp
 

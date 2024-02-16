@@ -1,8 +1,7 @@
 
-from modopt.csdl_library import CSDLProblem
-from modopt.scipy_library import SLSQP
+from modopt import CSDLProblem
+from modopt import SLSQP
 import matplotlib.pyplot as plt
-# import openmdao.api as om
 from ode_systems import ODESystemNative, ODESystemModel
 from ozone.api import ODEProblem, NativeSystem
 import csdl
@@ -117,6 +116,7 @@ optimizer = SLSQP(prob)
 
 # Solve your optimization problem
 optimizer.solve()
+optimizer.print_results()
 
 # Visualize
 plt.plot(sim['x_solved'])

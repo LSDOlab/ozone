@@ -1,9 +1,8 @@
 
 import time
 import matplotlib.pyplot as plt
-# import openmdao.api as om
-from ozone.api import ODEProblem, Wrap, NativeSystem
-from ode_systems import ODESystemModel, ODESystemNative, ODESystemNativeSparse
+from ozone.api import ODEProblem
+from ode_systems import ODESystemModel
 import csdl
 import python_csdl_backend
 import numpy as np
@@ -33,8 +32,6 @@ class ODEProblemTest(ODEProblem):
         # Define ODE system. We have three possible choices as defined in 'ode_systems.py'. Any of the three methods yield identical results:
 
         self.set_ode_system(ODESystemModel)  # Uncomment for Method 1
-        self.set_ode_system(ODESystemNative)  # Uncomment for Method 2
-        self.set_ode_system(ODESystemNativeSparse)  # Uncomment for Method 3
 
 # The CSDL Model containing the ODE integrator
 
@@ -72,8 +69,8 @@ class RunModel(csdl.Model):
 
 # Simulator Object: Note we are passing in a parameter that can be used in the ode system
 sim = python_csdl_backend.Simulator(RunModel(a=2.0, num_times=100), mode='rev')
-# sim.run()
+sim.run()
 
 # # Checktotals
-print(sim.prob['field_output'])
-sim.prob.check_totals(of=['field_output'], wrt=['y_0', 'x_0'], compact_print=True)
+print(sim['field_output'])
+sim.check_totals(of=['field_output'], wrt=['y_0', 'x_0'], compact_print=True)
