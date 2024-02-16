@@ -1,6 +1,5 @@
 
 import matplotlib.pyplot as plt
-import openmdao.api as om
 from ode_systems import ODESystemModel
 from ozone.api import ODEProblem
 import csdl
