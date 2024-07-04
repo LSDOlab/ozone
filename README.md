@@ -108,9 +108,7 @@ Installation
 ------------
 For installation, follow these steps:
 
-1. Install ``CSDL`` and an appropriate backend
-
-2. Clone this repository using ``git clone`` and navigate to directory. Use ``pip install -e .`` to install.
+1. Clone this repository using ``git clone`` and navigate to the root directory. Use ``pip install -e .`` to install (requires atleast python 3.9)
 
 run tests by running ``pytest`` while in root directory.
 
