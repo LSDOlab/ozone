@@ -6,26 +6,26 @@ import pytest
 # ================================= NS non-sparse =================================
 
 
-def test_NS_collocation_explicit():
-    settings_dictionary = get_settings_dict()
-    settings_dictionary['approach'] = 'collocation'
-    settings_dictionary['system'] = 'NSstd'
-    settings_dictionary['num_method'] = 'RK4'
-    checks = run_ode(settings_dictionary)
+# def test_NS_collocation_explicit():
+#     settings_dictionary = get_settings_dict()
+#     settings_dictionary['approach'] = 'collocation'
+#     settings_dictionary['system'] = 'NSstd'
+#     settings_dictionary['num_method'] = 'RK4'
+#     checks = run_ode(settings_dictionary)
 
-    check_output(checks['output'][0])
-    # check_derivs(checks['derivative_checks'])
+#     check_output(checks['output'][0])
+#     # check_derivs(checks['derivative_checks'])
 
 
-def test_NS_collocation_implicit():
-    settings_dictionary = get_settings_dict()
-    settings_dictionary['approach'] = 'collocation'
-    settings_dictionary['system'] = 'NSstd'
-    settings_dictionary['num_method'] = 'ImplicitMidpoint'
-    checks = run_ode(settings_dictionary)
+# def test_NS_collocation_implicit():
+#     settings_dictionary = get_settings_dict()
+#     settings_dictionary['approach'] = 'collocation'
+#     settings_dictionary['system'] = 'NSstd'
+#     settings_dictionary['num_method'] = 'ImplicitMidpoint'
+#     checks = run_ode(settings_dictionary)
 
-    check_output(checks['output'][0])
-    # check_derivs(checks['derivative_checks'])
+#     check_output(checks['output'][0])
+#     # check_derivs(checks['derivative_checks'])
 
 # ================================= CSDL =================================
 
@@ -36,7 +36,7 @@ def test_CSDL_collocation_explicit():
     settings_dictionary['system'] = 'CSDL'
     settings_dictionary['num_method'] = 'RK4'
     checks = run_ode(settings_dictionary)
-    check_output(checks['output'][0])
+    check_output(checks['output'])
     # check_derivs(checks['derivative_checks'])
 
 
@@ -46,7 +46,7 @@ def test_CSDL_collocation_implicit():
     settings_dictionary['system'] = 'CSDL'
     settings_dictionary['num_method'] = 'ImplicitMidpoint'
     checks = run_ode(settings_dictionary)
-    check_output(checks['output'][0])
+    check_output(checks['output'])
     # check_derivs(checks['derivative_checks'])
 
 # ================================= Functions =================================

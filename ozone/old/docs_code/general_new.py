@@ -1,0 +1,292 @@
+
+from scipy.linalg import block_diag
+from ozone.api import NativeSystem
+from scipy import sparse as sp
+import matplotlib.pyplot as plt
+# import openmdao.api as om
+from ozone.api import ODEProblem, NativeSystem
+import csdl
+import python_csdl_backend
+import numpy as np
+
+
+# ODE problem CLASS
+class ODEProblemTest(ODEProblem):
+    def setup(self):
+        # Define field outputs, profile outputs, states, parameters, times
+
+        # Outputs. coefficients for field outputs must be defined as an upstream variable
+        self.add_field_output('field_output_z', state_name='z', coefficients_name='coefficients')
+        self.add_field_output('field_output_y', state_name='y', coefficients_name='coefficients')
+
+        self.add_profile_output('profile_output_x')
+        self.add_profile_output('profile_output_z')
+
+        # If dynamic == True, The parameter must have shape = (self.num_times, ... shape of parameter @ every timestep ...)
+        # The ODE function will use the parameter value at timestep 't': parameter@ODEfunction[shape_p] = fullparameter[t, shape_p]
+        self.add_parameter('a', dynamic=True, shape=(self.num_times))
+        self.add_parameter('b', dynamic=True, shape=(self.num_times))
+        self.add_parameter('g', dynamic=True, shape=(self.num_times))
+        self.add_parameter('e', dynamic=True, shape=(self.num_times, 2, 2))
+        # If dynamic != True, it is a static parameter. i.e, the parameter used in the ODE is constant through time.
+        # Therefore, the shape does not depend on the number of timesteps
+        self.add_parameter('d')
+
+        # Inputs names correspond to respective upstream CSDL variables
+        self.add_state('y', 'dy_dt', initial_condition_name='y_0', output='y_integrated')
+        self.add_state('x', 'dx_dt', initial_condition_name='x_0')
+        self.add_state('z', 'dz_dt', initial_condition_name='z_0', shape=(2, 2), output='z_integrated')
+
+        self.add_times(step_vector='h')
+
+        # Define ODE and Profile Output systems (Either CSDL Model or Native System)
+
+        # ODE
+        self.set_ode_system(ODESystemNative)     # NATIVE comment one or the other
+        # self.set_ode_system(ODESystemCSDL)  # CSDL comment one or the other
+
+        # Profile
+        self.set_profile_system(POSystemNS)
+
+# The CSDL Model containing the ODE integrator
+
+
+class RunModel(csdl.Model):
+    def initialize(self):
+        self.parameters.declare('num_timesteps')
+
+    def define(self):
+        num_times = self.parameters['num_timesteps']
+
+        h_stepsize = 0.05
+
+        # Create given inputs
+        # Coefficients for field output
+        self.create_input('coefficients', np.ones(num_times+1)/(num_times+1))
+        # Initial condition for state
+        self.create_input('y_0', 2.0)
+        self.create_input('x_0', 2.0)
+        self.create_input('z_0', np.array([[2.0, 1.0], [-1.0, -3.0]]))
+
+        # Create parameter for parameters a,b,g,d
+        a = np.zeros((num_times, ))  # dynamic parameter defined at every timestep
+        b = np.zeros((num_times, ))  # dynamic parameter defined at every timestep
+        g = np.zeros((num_times, ))  # dynamic parameter defined at every timestep
+        e = np.zeros((num_times, 2, 2))  # dynamic parameter defined at every timestep
+        d = 0.5  # static parameter
+        for t in range(num_times):
+            a[t] = 1.0 + t/num_times/5.0  # dynamic parameter defined at every timestep
+            b[t] = 0.5 + t/num_times/5.0  # dynamic parameter defined at every timestep
+            g[t] = 2.0 + t/num_times/5.0  # dynamic parameter defined at every timestep
+            e[t, :, :] = np.array([[0.3, 0.2], [0.1, -2.6]]) + t/num_times/5.0  # dynamic parameter defined at every timestep
+
+        # Add to csdl model which are fed into ODE Model
+        self.create_input('a', a)
+        self.create_input('b', b)
+        self.create_input('g', g)
+        self.create_input('d', d)
+        self.create_input('e', e)
+
+        # Timestep vector
+        h_vec = np.ones(num_times)*h_stepsize
+        self.create_input('h', h_vec)
+
+        # Create Model containing integrator
+        ODEProblem = ODEProblemTest('RK4', 'time-marching', num_times, display='default', visualization='none')
+        # ODEProblem = ODEProblemTest('RK4', 'time-marching checkpointing', num_times, display='default', visualization='none')
+        # ODEProblem = ODEProblemTest('RK4', 'solver-based', num_times, display='default', visualization='none')
+
+        self.add(ODEProblem.create_solver_model(), 'subgroup')
+
+        foy = self.declare_variable('field_output_y')
+        pox = self.declare_variable('profile_output_x', shape=(num_times+1, ))
+        poz = self.declare_variable('profile_output_z', shape=(num_times+1, ))
+        y_int = self.declare_variable('y_integrated', shape=(num_times+1, ))
+        z_int = self.declare_variable('z_integrated', shape=(num_times+1, 2, 2))
+
+        self.register_output('total', pox[-1]+poz[-1]+foy[0]+y_int[-1])
+
+
+class ODESystemNative(NativeSystem):
+    # Setup sets up variables. similar to ExplicitComponnent in OpenMDAO
+    def setup(self):
+        # Need to have ODE shapes similar as first example
+        n = self.num_nodes
+        self.add_input('y', shape=n)
+        self.add_input('x', shape=n)
+
+        self.add_output('dy_dt', shape=n)
+        self.add_output('dx_dt', shape=n)
+
+        self.add_input('a', shape=n)
+        self.add_input('b', shape=n)
+        self.add_input('g', shape=n)
+        self.add_input('d')
+        self.add_input('e', shape=(n, 2, 2))
+
+        self.add_input('z', shape=(n, 2, 2))
+        self.add_output('dz_dt', shape=(n, 2, 2))
+
+        self.declare_partial_properties('dy_dt', 'g', empty=True)
+        self.declare_partial_properties('dy_dt', 'd', empty=True)
+        self.declare_partial_properties('dy_dt', 'z', empty=True)
+        self.declare_partial_properties('dy_dt', 'e', empty=True)
+
+        self.declare_partial_properties('dx_dt', 'a', empty=True)
+        self.declare_partial_properties('dx_dt', 'b', empty=True)
+        self.declare_partial_properties('dx_dt', 'z', empty=True)
+        self.declare_partial_properties('dx_dt', 'e', empty=True)
+        self.declare_partial_properties('dx_dt', 'x', complex_step_directional=True)
+
+        self.declare_partial_properties('dz_dt', 'b', empty=True)
+        self.declare_partial_properties('dz_dt', 'g', empty=True)
+        self.declare_partial_properties('dz_dt', 'd', empty=True)
+        self.declare_partial_properties('dz_dt', 'x', sparse=True)
+
+        self.dzx = sp.csc_matrix(np.kron(np.eye(n), np.array([[0.5], [0.5], [0.5], [0.5]])))
+        # self.declare_partial_properties('dz_dt', 'y', empty=True)
+        # self.declare_partial_properties('dz_dt', 'a', empty=True)
+        # self.declare_partial_properties('dz_dt', 'x', empty=True)
+
+    # compute the ODE function. similar to ExplicitComponnent in OpenMDAO
+
+    def compute(self, inputs, outputs):
+        n = self.num_nodes
+        a = inputs['a']
+        b = inputs['b']
+        g = inputs['g']
+        d = inputs['d']
+
+        # Outputs
+        outputs['dy_dt'] = np.multiply(a, inputs['y']) - np.multiply(b, np.multiply(inputs['y'], inputs['x']))
+        outputs['dx_dt'] = np.multiply(g, np.multiply(inputs['y'], inputs['x'])) - d*inputs['x']
+
+        outputs['dz_dt'] = np.zeros((n, 2, 2))
+        # for key in inputs:
+        #     print(key, inputs[key])
+        for i in range(n):
+            outputs['dz_dt'][i, :, :] = -inputs['z'][i, :, :]/3.0+(inputs['y'][i]**2)/2.0+(inputs['a'][i])*inputs['e'][i, :, :]+inputs['x'][i]/2.0
+
+    def compute_partials(self, inputs, partials):
+        n = self.num_nodes
+        a = inputs['a']
+        b = inputs['b']
+        g = inputs['g']
+        d = inputs['d']
+
+        # The partials to compute.
+        partials['dy_dt']['y'] = np.diag(a - b*inputs['x'])
+        partials['dy_dt']['x'] = np.diag(- b*inputs['y'])
+        partials['dx_dt']['y'] = np.diag(g*inputs['x'])
+        # partials['dx_dt']['x'] = np.diag(g*inputs['y']-d)
+
+        partials['dy_dt']['a'] = np.diag(inputs['y'])
+        partials['dy_dt']['b'] = np.diag(-np.multiply(inputs['y'], inputs['x']))
+        partials['dx_dt']['d'] = np.array(-inputs['x'])
+        partials['dx_dt']['g'] = np.diag(np.multiply(inputs['y'], inputs['x']))
+
+        partials['dz_dt']['z'] = -np.eye(4*n)/3.0
+
+        list_block_y = []
+        list_block_a = []
+        list_block_e = []
+        for i in range(n):
+            list_block_y.append(np.array([[inputs['y'][i]], [inputs['y'][i]], [inputs['y'][i]], [inputs['y'][i]]]))
+            list_block_a.append(inputs['e'][i, :, :].reshape(4, 1))
+            list_block_e.append(np.eye(4)*inputs['a'][i])
+
+        partials['dz_dt']['y'] = block_diag(*list_block_y)
+        partials['dz_dt']['a'] = block_diag(*list_block_a)
+        partials['dz_dt']['e'] = block_diag(*list_block_e)
+        partials['dz_dt']['x'] = self.dzx
+        # partials['dz_dt']['x'] = np.kron(np.eye(n), np.array([[0.5], [0.5], [0.5], [0.5]]))
+
+        # print(partials['dz_dt']['y'])
+
+        # The structure of partials has the following for n = self.num_nodes =  4:
+        # d(dy_dt)/dy =
+        # [d(dy_dt1)/dy1  0               0               0            ]
+        # [0              d(dy_dt2)/dy2   0               0            ]
+        # [0              0               d(dy_dt2)/dy2   0            ]
+        # [0              0               0               d(dy_dt2)/dy2]
+        # Hence the diagonal
+
+
+class ODESystemCSDL(csdl.Model):
+    # Setup sets up variables. similar to ExplicitComponnent in OpenMDAO
+    def initialize(self):
+        # Required every time for ODE systems or Profile Output systems
+        self.parameters.declare('num_nodes')
+
+    def define(self):
+        n = self.parameters['num_nodes']
+
+        y = self.declare_variable('y', shape=n)
+        x = self.declare_variable('x', shape=n)
+        a = self.declare_variable('a', shape=n)
+        b = self.declare_variable('b', shape=n)
+        g = self.declare_variable('g', shape=n)
+        d = self.declare_variable('d')
+        e = self.declare_variable('e', shape=(n, 2, 2))
+        z = self.declare_variable('z', shape=(n, 2, 2))
+
+        dy_dt = a*y - b*y*x
+        dx_dt = g*x*y-csdl.expand(d, n)*x
+
+        dz_dt = self.create_output('dz_dt', shape=(n, 2, 2))
+        for i in range(n):
+            temp_y = y[i]**2
+            temp_a = a[i]
+            temp_x = x[i]
+            dz_dt[i, :, :] = -z[i, :, :]/3.0+csdl.expand(temp_y, (1, 2, 2))/2.0 + csdl.expand(temp_a, (1, 2, 2))*e[i, :, :] + csdl.expand(temp_x, (1, 2, 2))/2.0
+
+        # self.register_output('dz_dt', dz_dt)
+        self.register_output('dy_dt', dy_dt)
+        self.register_output('dx_dt', dx_dt)
+
+
+class POSystemNS(NativeSystem):
+
+    def setup(self):
+        # Need to have ODE shapes similar as first example
+        n = self.num_nodes
+        self.add_input('x', shape=n)
+        self.add_input('y', shape=n)
+        self.add_input('z', shape=(n, 2, 2))
+
+        self.add_output('profile_output_x', shape=(n))
+        self.add_output('profile_output_z', shape=(n))
+
+        c_z = np.arange(3, n*4+3, 4)
+        r_z = np.arange(0, n, 1)
+        v_z = np.ones(n)
+
+        rc_x = np.arange(0, n, 1)
+        v_x = np.ones(n)
+
+        self.declare_partial_properties('profile_output_z', 'z', rows=r_z, cols=c_z, vals=v_z)
+        self.declare_partial_properties('profile_output_z', 'x', empty=True)
+        self.declare_partial_properties('profile_output_z', 'y', empty=True)
+
+        self.declare_partial_properties('profile_output_x', 'x', rows=rc_x, cols=rc_x, vals=v_x)
+        self.declare_partial_properties('profile_output_x', 'z', empty=True)
+
+    def compute(self, inputs, outputs):
+        outputs['profile_output_z'] = inputs['z'][:, 1, 1].flatten()
+        outputs['profile_output_x'] = inputs['x'] + inputs['y']*inputs['y']
+
+    def compute_partials(self, inputs, partials):
+        partials['profile_output_x']['y'] = 2*np.diag(inputs['y'])
+
+
+# Simulator Object:
+nt = 30
+sim = python_csdl_backend.Simulator(RunModel(num_timesteps=nt), mode='rev')
+sim.prob.run_model()
+# sim.visualize_implementation()
+
+# Checktotals
+print(sim.prob['total'])
+# sim.prob.check_totals(of=['total'], wrt=['x_0', 'a', 'h'], compact_print=True)
+
+plt.show()

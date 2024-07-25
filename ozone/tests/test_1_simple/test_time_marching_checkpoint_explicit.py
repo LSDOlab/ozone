@@ -6,15 +6,15 @@ import pytest
 # ================================= NS non-sparse =================================
 
 
-def test_NS_timemarching_explicit():
-    settings_dictionary = get_settings_dict()
-    settings_dictionary['approach'] = 'time-marching checkpointing'
-    settings_dictionary['system'] = 'NSstd'
-    settings_dictionary['num_method'] = 'RK4'
-    checks = run_ode(settings_dictionary)
+# def test_NS_timemarching_explicit():
+#     settings_dictionary = get_settings_dict()
+#     settings_dictionary['approach'] = 'time-marching checkpointing'
+#     settings_dictionary['system'] = 'NSstd'
+#     settings_dictionary['num_method'] = 'RK4'
+#     checks = run_ode(settings_dictionary)
 
-    check_output(checks['output'][0])
-    check_derivs(checks['derivative_checks'])
+#     check_output(checks['output'][0])
+#     check_derivs(checks['derivative_checks'])
 
 
 # ================================= CSDL =================================

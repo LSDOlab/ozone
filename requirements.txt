@@ -5,7 +5,6 @@ gprof2dot==2021.2.21
 guppy3==3.1.0
 -e git+https://github.com/lsdolab/modopt.git@main#egg=modopt
 numpy==1.23.1
-openmdao==3.10.0
 pytest==7.1.2
 -e git+https://github.com/LSDOlab/python_csdl_backend.git@master#egg=python_csdl_backend
 python-utils==2.5.6

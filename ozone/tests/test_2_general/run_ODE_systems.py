@@ -128,6 +128,8 @@ class ODESystemCSDL(csdl.Model):
         e = self.create_input('e', shape=(n, 2, 2))
         z = self.create_input('z', shape=(n, 2, 2))
 
+        z_adjust1 = csdl.expand(csdl.reshape(z[:,0,1], (n,)), (n, 2, 2), 'i->ijk')
+
         dy_dt = a*y - b*y*x
         dx_dt = g*x*y-csdl.expand(d, n)*x
 
@@ -136,7 +138,7 @@ class ODESystemCSDL(csdl.Model):
             temp_y = y[i]**2
             temp_a = a[i]
             temp_x = x[i]
-            dz_dt[i, :, :] = -z[i, :, :]/3.0+csdl.expand(temp_y, (1, 2, 2))/2.0 + csdl.expand(temp_a, (1, 2, 2))*e[i, :, :] + csdl.expand(temp_x, (1, 2, 2))/2.0
+            dz_dt[i, :, :] = -z[i, :, :]/3.0*z_adjust1[i, :, :]+csdl.expand(temp_y, (1, 2, 2))/2.0 + csdl.expand(temp_a, (1, 2, 2))*e[i, :, :] + csdl.expand(temp_x, (1, 2, 2))/2.0
 
         # self.register_output('dz_dt', dz_dt)
         self.register_output('dy_dt', dy_dt)
@@ -207,9 +209,14 @@ class POSystem(csdl.Model):
         e = self.create_input('e', shape=(n, 2, 2))
         z = self.create_input('z', shape=(n, 2, 2))
 
+        z_adjust1 = csdl.reshape(z[:,0,1], (n,))
+        z_adjust1 = csdl.expand(z_adjust1, (n, 2, 2), 'i->ijk')
+        z_adjust2 = csdl.reshape(z[:,1,0], (n,))
+        z_adjust2 = csdl.expand(z_adjust2, (n, 2, 2), 'i->ijk')
+
         profile_output_z = csdl.reshape(z[:, 1, 1], (n,))
         profile_output_x = x + (y/4.0)*y
-        profile_output_y = z + e**2 + csdl.expand(a, (n, 2, 2), 'i->ijk') + csdl.expand(d, (n, 2, 2))
+        profile_output_y = z*z_adjust1*z_adjust2 + e**2 + csdl.expand(a, (n, 2, 2), 'i->ijk') + csdl.expand(d, (n, 2, 2))
 
         self.register_output('profile_output_x', profile_output_x)
         self.register_output('profile_output_y', profile_output_y)

@@ -24,6 +24,7 @@ class TimeMarchingWithCheckpointing(TimeMarching):
                 of nodes for ODE system = number of stages and number of nodes for profile out = 1 as it is
                 not vectorized.
         """
+        self.time_marching_store_jac = False
 
         # TimeMarching's post_setup_init is run first. Everything after this line is specific only to time-marching checkpointing
         # Create checkpoints

@@ -1,6 +1,5 @@
 
 import matplotlib.pyplot as plt
-
 from ode_systems import ODESystemModel, ProfileModel
 from ozone.api import ODEProblem, NativeSystem
 import csdl
@@ -84,7 +83,13 @@ class RunModel(csdl.Model):
         h = self.create_input('h', h_vec)
 
         # Create Model containing integrator
-        ODEProblem = ODEProblemTest('RK4', 'time-marching', num_times, display='default', visualization='None')
+        ODEProblem = ODEProblemTest(
+            'RK4',
+            'time-marching',
+            num_times,
+            display='default',
+            visualization='None',
+        )
         # ODEProblem = ODEProblemTest('RK4', 'solver-based', num_times, display='default', visualization='None')
 
         self.add(ODEProblem.create_solver_model(), 'subgroup')
@@ -96,8 +101,7 @@ class RunModel(csdl.Model):
 
 
 # Simulator Object:
-# sim = python_csdl_backend.Simulator(RunModel(num_times=100), mode='rev')
-sim = python_csdl_backend.Simulator(RunModel(num_times=30), mode='rev', analytics=1)
+sim = python_csdl_backend.Simulator(RunModel(num_times=30), mode='rev')
 
 sim.run()
 po1 = sim['po1']

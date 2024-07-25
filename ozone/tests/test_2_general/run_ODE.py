@@ -1,6 +1,5 @@
 
 import matplotlib.pyplot as plt
-
 from ozone.api import NativeSystem
 import csdl
 import python_csdl_backend
@@ -17,6 +16,7 @@ def run_ode(settings_dict):
     system_type = settings_dict['system']
     fwd_solver = settings_dict['fwd_solver']
     jvp_solver = settings_dict['jvp_solver']
+    store_jacs = settings_dict['store_jacs']
 
     # ODE problem CLASS
     class ODEProblemTest(ODEProblem):
@@ -131,14 +131,15 @@ def run_ode(settings_dict):
         display='default',
         visualization='None',
         implicit_solver_fwd=fwd_solver,
-        implicit_solver_jvp=jvp_solver)
+        implicit_solver_jvp=jvp_solver,
+        time_marching_store_jac=store_jacs)
 
     sim = python_csdl_backend.Simulator(RunModel(num_timesteps=nt), mode='rev')
     sim.run()
 
     if approach_test == 'collocation':
-        from modopt.scipy_library import SLSQP
-        from modopt.csdl_library import CSDLProblem
+        from modopt import SLSQP
+        from modopt import CSDLProblem
         prob = CSDLProblem(
             problem_name='test_2',
             simulator=sim,
@@ -151,6 +152,15 @@ def run_ode(settings_dict):
 
     val = sim['total']
     print('total: ', val)
+    val2 = sim['total2']
+    print('total2: ', val2)
+    val = {
+        'total': np.array(val),
+        'total2':  np.array(val2),
+    }
+    # exit()
+    # total:  [2.8050334]
+    # total2:  22.27925077337252
 
     derivative_checks = sim.compute_totals(of=['total', 'total2'], wrt=['a', 'x_0', 'h', 'z_0', 'e'])
     # sim.check_totals(of=['total','total2'], wrt=['a', 'x_0', 'h', 'z_0', 'e'])

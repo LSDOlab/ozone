@@ -13,8 +13,10 @@ def get_integrator(approach):
         approach: str
             Approach specified by user
     """
-    return integrator_dict[approach]
-
+    if approach in integrator_dict:
+        return integrator_dict[approach]
+    else:
+        raise ValueError(f'Approach {approach} not recognized. Available approaches are: {list(integrator_dict.keys())}')
 
 # Dictionary of integrator string and appropriate class
 integrator_dict = {'time-marching': TimeMarching,

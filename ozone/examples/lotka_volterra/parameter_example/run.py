@@ -1,8 +1,7 @@
 
 import matplotlib.pyplot as plt
-
-from ode_systems import ODESystemNative, ODESystemModel
-from ozone.api import ODEProblem, NativeSystem
+from ode_systems import ODESystemModel
+from ozone.api import ODEProblem
 import csdl
 import python_csdl_backend
 import numpy as np
@@ -94,7 +93,7 @@ class RunModel(csdl.Model):
 # sim = python_csdl_backend.Simulator(RunModel(num_times=100), mode='rev')
 sim = python_csdl_backend.Simulator(RunModel(num_times=10), mode='rev')
 
-sim.prob.run_model()
-print(sim.prob['field_output'])
+sim.run()
+print(sim['field_output'])
 # sim.visualize_implementation()
-sim.prob.check_totals(of='fo', wrt=['y_0', 'x_0', 'h', 'a'], compact_print=True)
+sim.check_totals(of='fo', wrt=['y_0', 'x_0', 'h', 'a'], compact_print=True)
