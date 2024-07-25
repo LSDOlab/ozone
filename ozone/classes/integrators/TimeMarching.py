@@ -112,7 +112,7 @@ class TimeMarching(IntegratorBase):
                     self.A_rows.append([])
                 self.U_rows.append(self.GLM_U[i, :].flatten())
 
-            self.Ah = np.copy(self.A_rows)
+            self.Ah = self.A_rows.copy()
 
             # initialize 'f current' for each state
             for key in self.state_dict:
