@@ -2,7 +2,7 @@
 import numpy as np
 import pytest
 import csdl_alpha as csdl
-import ozone_alpha as ozone
+import ozone as ozone
 
 """This example uses a dummy ODE problem to demonstrate the performance tradeoff between TimeMarching and TimeMarchingCheckpoints"""
 

@@ -20,13 +20,13 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setup(
-    name='ozone_alpha',
-    version=get_version('ozone_alpha/__init__.py'),
+    name='ozone',
+    version=get_version('ozone/__init__.py'),
     author='Author name',
     author_email='msperry@ucsd.edu.com',
     license='LGPLv3+',
     keywords='python project template repository package',
-    url='http://github.com/LSDOlab/ozone_alpha',
+    url='http://github.com/LSDOlab/ozone',
     long_description=long_description,
     long_description_content_type='text/markdown',
     packages=find_packages(),

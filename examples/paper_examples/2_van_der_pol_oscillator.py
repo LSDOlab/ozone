@@ -2,8 +2,8 @@ import numpy as np
 import time
 
 import csdl_alpha as csdl
-import ozone_alpha as ozone
-from ozone_alpha.paper_examples.van_der_pol.main_model import build_recorder
+import ozone as ozone
+from ozone.paper_examples.van_der_pol.main_model import build_recorder
 import numpy as np
 import time
 

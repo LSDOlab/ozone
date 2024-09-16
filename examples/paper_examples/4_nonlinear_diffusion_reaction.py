@@ -2,11 +2,11 @@ nthreads = 1						### (in script)) set # of numpy threads
 import os
 os.environ["OPENBLAS_NUM_THREADS"] = str(nthreads)
 import csdl_alpha as csdl
-import ozone_alpha as ozone
+import ozone as ozone
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.sparse import kron, eye, hstack, csr_matrix
-from ozone_alpha.paper_examples.pde_control.pde_control import build_recorder
+from ozone.paper_examples.pde_control.pde_control import build_recorder
 
 def get_model_pde_control(
         approach:ozone.approaches._Approach,

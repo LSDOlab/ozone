@@ -1,5 +1,5 @@
 import csdl_alpha as csdl
-import ozone_alpha as ozone
+import ozone as ozone
 import numpy as np
 
 recorder = csdl.Recorder(inline = True, debug = False)
