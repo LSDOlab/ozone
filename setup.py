@@ -36,6 +36,8 @@ setup(
         'csdl_alpha @ git+https://github.com/LSDOlab/CSDL_alpha.git',
         'modopt @ git+https://github.com/LSDOlab/modopt.git',
         'numpy',
+        'scipy',
+        'pyslsqp',
         'pytest',
         'myst-nb',
         'sphinx==5.3.0',
