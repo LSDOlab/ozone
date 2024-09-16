@@ -1,7 +1,4 @@
 import numpy as np
-nthreads = 1						### (in script)) set # of numpy threads
-import os
-os.environ["OPENBLAS_NUM_THREADS"] = str(nthreads)
 import csdl_alpha as csdl
 import ozone as ozone
 from ozone.paper_examples.ascent_system.main_model import build_recorder
@@ -14,7 +11,7 @@ def get_model_ascent_system(
         num:int,
     )->tuple[csdl.Recorder, str, dict]:
 
-    # See inside this function to see CSDL/Ozone implementation
+    #### See inside this function to see CSDL/Ozone implementation ####
     recorder, _, _ = build_recorder(approach, method, num, plot=True)
     return recorder
 
