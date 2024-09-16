@@ -25,7 +25,7 @@ def get_model_pde_control(
 
     ODEProblem = ozone.ODEProblem(method, approach)
 
-    # See inside this function to see CSDL/Ozone implementation
+    #### See inside this function to see CSDL/Ozone implementation ####
     recorder = build_recorder(
         options_dict={'nt': nt, 'nx': nx, 'tf': tf,},
         ode_problem=ODEProblem,

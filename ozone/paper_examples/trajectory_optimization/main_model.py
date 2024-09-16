@@ -5,6 +5,8 @@ import numpy as np
 from ozone.paper_examples.trajectory_optimization.ode_func import ode_function
 from ozone.paper_examples.trajectory_optimization.tonal import tonal
 
+### Credit to Nicholas Orndorff for original formulation and implementation 
+
 options = {}  # aircraft and mission parameter dictionary
 # aircraft data
 options['mass'] = 2000  # 3724 (kg)
@@ -108,11 +110,7 @@ def build_recorder(num:int, approach:ozone.approaches._Approach, method:str):
     control_x.set_as_design_variable(lower=0, scaler=0.01)
     control_z.set_as_design_variable(lower=0, scaler=0.01)
     dt.set_as_design_variable(lower=0.2, scaler=1.0)
-#  Objective                          : 1.2563134538239056
-        # Num. of infeasible constraints     : 0
-        # Sum. of infeasibilities            : 0.0
-        # Num. of superbasic variables       : 109
-        # Major iterations                   : 234
+
     # Set objective:
     energy = integrated_outputs.states['e'][-1]
     energy.set_as_objective(scaler=0.001)

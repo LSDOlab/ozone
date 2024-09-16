@@ -22,6 +22,8 @@ def ode_function(
 
     # initialize time rhs
     dx_dts = []
+
+    # Instead of vectorizing, just loop over nodes
     for node in range(nn):
         # second derivative term:
         x_vec = csdl.reshape(x[node, :], (nx, 1))
