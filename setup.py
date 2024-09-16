@@ -30,7 +30,7 @@ setup(
     long_description=long_description,
     long_description_content_type='text/markdown',
     packages=find_packages(),
-    python_requires='>=3.7',
+    python_requires='>=3.9',
     platforms=['any'],
     install_requires=[
         'csdl_alpha @ git+https://github.com/LSDOlab/CSDL_alpha.git',
