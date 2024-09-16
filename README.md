@@ -11,10 +11,10 @@
 
 We encourage users to look at the examples:
 * [Lotka Volterra](examples/simple_examples/lotka_volterra.py)
-* [Van der Pol Oscillator](examples/paper_examples/2_van_der_pol_oscillator.py)
-* [Lunar Ascent System](examples/paper_examples/1_lunar_ascent.py)
-* [Trajectory Optimization](examples/paper_examples/3_trajectory_optimization.py)
-* [Diffusion Reaction PDE](example/paper_examples/4_nonlinear_diffusion_reaction.py)
+* [Van der Pol Oscillator](examples/paper_examples/2_van_der_pol_oscillator.py) (from the [`Dymos` documentation](https://openmdao.org/dymos/docs/latest/examples/vanderpol/vanderpol.html))
+* [Lunar Ascent System](examples/paper_examples/1_lunar_ascent.py) (from [Sandoval et al.](https://arc.aiaa.org/doi/abs/10.2514/6.2022-0949))
+* [Trajectory Optimization](examples/paper_examples/3_trajectory_optimization.py) (from [Orndorff and Hwang](https://arc.aiaa.org/doi/abs/10.2514/6.2022-3485))
+* [Diffusion Reaction PDE](examples/paper_examples/4_nonlinear_diffusion_reaction.py) (from [Armaou and Christofides](https://www.sciencedirect.com/science/article/abs/pii/S0009250902004190))
 
 # Installation
 For direct installation with all dependencies, run on the terminal or command line
