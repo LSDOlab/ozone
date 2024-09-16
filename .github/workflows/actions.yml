@@ -36,7 +36,9 @@ jobs:
         python -m pip install --upgrade pip
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
         pip install -e .
-
+        pip install -U jax
+        pip install -e .
+        
       # Finally, we run the package unit-tests on the specified OS and python versions.
     - name: Test with pytest
       run: |
