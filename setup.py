@@ -33,7 +33,7 @@ setup(
     python_requires='>=3.7',
     platforms=['any'],
     install_requires=[
-        'csdl @ git+https://github.com/LSDOlab/CSDL_alpha.git',
+        'csdl_alpha @ git+https://github.com/LSDOlab/CSDL_alpha.git',
         'modopt @ git+https://github.com/LSDOlab/modopt.git',
         'numpy',
         'pytest',
