@@ -7,7 +7,7 @@
 # Introduction
 `Ozone` is a Python library for solving ordinary differential equations (ODEs) within gradient-based optimization algorithms. The ODEs can be solved via one of four available solution approaches (time-marching, time-marching with checkpointing, Picard iteration, and collocation) using any explicit or implicit Runge--Kutta method. Automatic derivatives with respect to parameters and timespans are available for all approaches and methods.
 
-`Ozone` is implemented using the [Computational System Design Language](https://github.com/LSDOlab/CSDL_alpha) (`CSDL`), a framework for building and solving optimization models. To use `ozone`, users must work within the `CSDL` framework. For guidance on how to use `CSDL`, please refer to its [documentation](https://csdl-alpha.readthedocs.io/en/latest/).
+`Ozone` is implemented using the [Computational System Design Language](https://github.com/LSDOlab/CSDL_alpha) (`CSDL`), a framework for building and solving optimization models. To use `ozone`, users must work within the `CSDL` framework. For guidance on how to use `CSDL`, please refer to its [documentation](https://csdl-alpha.readthedocs.io/en/latest/). `Ozone` also uses [modopt](https://github.com/LSDOlab/modopt) to interface to optimization algorithms.
 
 We encourage users to look at the examples:
 * [Lotka Volterra](examples/simple_examples/lotka_volterra.py)
@@ -22,7 +22,7 @@ For direct installation with all dependencies, run on the terminal or command li
 pip install git+https://github.com/LSDOlab/ozone.git
 ```
 This should install all required packages.
-If `csdl_alpha` and `modopt` failed to install:
+If `csdl_alpha` or `modopt` failed to install, try:
 ```sh
 pip install git+https://github.com/LSDOlab/csdl_alpha.git
 pip install git+https://github.com/LSDOlab/modopt.git
