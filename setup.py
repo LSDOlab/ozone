@@ -39,6 +39,8 @@ setup(
         'scipy',
         'pyslsqp',
         'pytest',
+        'smt',
+        'seaborn',
         'myst-nb',
         'sphinx==5.3.0',
         'sphinx_rtd_theme',

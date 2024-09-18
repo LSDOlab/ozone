@@ -53,8 +53,8 @@ if __name__ == '__main__':
 
         # Solve Optimization problem
         import modopt as mo
-        prob = mo.CSDLAlphaProblem(problem_name='quartic',simulator=jax_sim)
-        optimizer = mo.SLSQP(prob, solver_options={'maxiter':3000, 'ftol':1e-6})
+        prob = mo.CSDLAlphaProblem(problem_name='vdp',simulator=jax_sim)
+        optimizer = mo.PySLSQP(prob, solver_options={'maxiter':3000, 'acc':1e-6})
 
         # Time optimization
         start = time.time()
