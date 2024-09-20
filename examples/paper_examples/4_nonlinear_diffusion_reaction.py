@@ -63,7 +63,7 @@ if __name__ == '__main__':
     # Solve Optimization problem
     import modopt as mo
     prob = mo.CSDLAlphaProblem(problem_name='PDE',simulator=jax_sim)
-    optimizer = mo.PySLSQP(prob, solver_options={'acc':1e-6, 'maxiter':200})
+    optimizer = mo.SLSQP(prob, solver_options={'ftol':1e-6, 'maxiter':200})
     optimizer.solve()
 
     # Print results of optimization

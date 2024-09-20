@@ -49,7 +49,7 @@ if __name__ == '__main__':
     # Solve Optimization problem
     import modopt as mo
     prob = mo.CSDLAlphaProblem(problem_name='trajectory_opt',simulator=jax_sim)
-    optimizer = mo.PySLSQP(prob, turn_off_outputs = True, solver_options={'maxiter':max_iter})
+    optimizer = mo.SLSQP(prob, turn_off_outputs = True, solver_options={'maxiter':max_iter})
     # optimizer = mo.SNOPT(
     #     prob,
     #     solver_options = {'Major optimality':2e-4, 'Major feasibility':1e-4,'Major iterations':600,'Iteration limit':100000, 'Verbose':False},

@@ -39,7 +39,7 @@ if __name__ == '__main__':
     # Solve Optimization problem
     import modopt as mo
     prob = mo.CSDLAlphaProblem(problem_name='ascent',simulator=jax_sim)
-    optimizer = mo.PySLSQP(prob, turn_off_outputs = True) # Requires PySLSQP and ModOPT package
+    optimizer = mo.SLSQP(prob, turn_off_outputs = True) # Requires Scipy SLSQP and ModOPT package
     optimizer.solve()
 
     # Plot:

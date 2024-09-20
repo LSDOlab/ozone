@@ -37,7 +37,7 @@ setup(
         'modopt @ git+https://github.com/LSDOlab/modopt.git',
         'numpy',
         'scipy',
-        'pyslsqp',
+        # 'pyslsqp',
         'pytest',
         'smt',
         'seaborn',
