@@ -24,7 +24,7 @@ def run_ode(settings_dict, build_and_run_ode):
 
     if isinstance(approach_test, ozone.approaches.Collocation):
         from modopt import CSDLAlphaProblem
-        from modopt import PySLSQP
+        from modopt import SLSQP
         
         # Dummy objective
         x = csdl.Variable(name = 'x_dummy', value = 2.0)
@@ -51,10 +51,10 @@ def run_ode(settings_dict, build_and_run_ode):
         jax_sim.compute_optimization_derivatives()
         prob = CSDLAlphaProblem(problem_name='dparam',simulator=jax_sim)
         options = dict(
-            acc=1e-9,
+            ftol=1e-9,
         )
 
-        optimizer = PySLSQP(prob, solver_options = options, turn_off_outputs = True)
+        optimizer = SLSQP(prob, solver_options = options, turn_off_outputs = True)
         optimizer.solve()
 
     rec.stop()
