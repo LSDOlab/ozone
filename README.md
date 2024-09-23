@@ -7,9 +7,12 @@
 # Introduction
 `Ozone` is a Python library for solving ordinary differential equations (ODEs) within gradient-based optimization algorithms. The ODEs can be solved via one of four available solution approaches (time-marching, time-marching with checkpointing, Picard iteration, and collocation) using any explicit or implicit Runge--Kutta method. Automatic derivatives with respect to parameters and timespans are available for all approaches and methods.
 
-`Ozone` is implemented using the [Computational System Design Language](https://github.com/LSDOlab/CSDL_alpha) (`CSDL`), a framework for building and solving optimization models. To use `ozone`, users must work within the `CSDL` framework. For guidance on how to use `CSDL`, please refer to its [documentation](https://csdl-alpha.readthedocs.io/en/latest/). `Ozone` also uses [modopt](https://github.com/LSDOlab/modopt) to interface to optimization algorithms.
+`Ozone` is implemented using the [Computational System Design Language](https://github.com/LSDOlab/CSDL_alpha) (`CSDL`), a framework for building and solving optimization models. To use `ozone`, users must work within the `CSDL` framework. For guidance on how to use `CSDL`, please refer to its [documentation](https://csdl-alpha.readthedocs.io/en/latest/). 
+
+`Ozone` also uses [modopt](https://github.com/LSDOlab/modopt) to interface to optimization algorithms (documentation [here](https://modopt.readthedocs.io/en/latest/)).
 
 We encourage users to look at the examples:
+* [Tutuorial](examples/simple_examples/tutorial.ipynb)
 * [Lotka Volterra](examples/simple_examples/lotka_volterra.py)
 * [Van der Pol Oscillator](examples/paper_examples/2_van_der_pol_oscillator.py) (from the [`Dymos` documentation](https://openmdao.org/dymos/docs/latest/examples/vanderpol/vanderpol.html))
 * [Lunar Ascent System](examples/paper_examples/1_lunar_ascent.py) (from [Sandoval et al.](https://arc.aiaa.org/doi/abs/10.2514/6.2022-0949))
@@ -27,9 +30,8 @@ If `csdl_alpha` or `modopt` failed to install, try:
 pip install git+https://github.com/LSDOlab/csdl_alpha.git
 pip install git+https://github.com/LSDOlab/modopt.git
 ```
+To take advantage of `CSDL`'s JAX backend, you'll need to have JAX installed. You can follow the [installation guide](https://github.com/jax-ml/jax?tab=readme-ov-file#installation) for instructions.
 
-# Tutorial
-(Soon)
 
 # License
 This project is licensed under the terms of the **GNU Lesser General Public License v3.0**.

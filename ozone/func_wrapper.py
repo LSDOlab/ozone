@@ -30,7 +30,10 @@ class FuncVars(object):
             if state_name not in self.d_states:
                 raise KeyError(f'No state derivative specified for state \'{state_name}\'.')
             if self.d_states[state_name].shape != state_input.shape:
-                raise ValueError(f'Expected shape {state_input.shape} for state derivative \'{state_name}\' but got {self.d_states[state_name].shape}')
+                if self.d_states[state_name].size == state_input.size:
+                    self.d_states[state_name] = self.d_states[state_name].reshape(state_input.shape)
+                else:
+                    raise ValueError(f'Expected shape {state_input.shape} for state derivative \'{state_name}\' but got {self.d_states[state_name].shape}')
         for d_state_name in self.d_states:
             if d_state_name not in self.states:
                 raise KeyError(f'User set state derivative \'{d_state_name}\' but state \'{d_state_name}\' does not exist. Given states: {list(self.states.keys())}')
