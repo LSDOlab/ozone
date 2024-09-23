@@ -26,7 +26,7 @@ d_static = csdl.Variable(name = 'd', value = 0.5)
 # Timestep vector with 9 timesteps of size 0.1
 h = csdl.Variable(name = 'h', value = np.full(num_times-1, 0.1))
 
-def ode_function(ozone_vars:ozone.FuncVars, d:csdl.Variable):
+def ode_function(ozone_vars:ozone.ODEVars, d:csdl.Variable):
     a = ozone_vars.dynamic_parameters['a'] # a(t)
     x = ozone_vars.states['x'] # x
     y = ozone_vars.states['y'] # y

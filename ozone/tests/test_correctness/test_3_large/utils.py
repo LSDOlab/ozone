@@ -23,7 +23,7 @@ def build_and_run_ode(
     h_vec = csdl.Variable(name = 'h', value = h_vec)
     
     # ODE function:
-    def f(ozone_vars:ozone.FuncVars):
+    def f(ozone_vars:ozone.ODEVars):
         y = ozone_vars.states['y']
         n = ozone_vars.num_nodes
         dp = ozone_vars.dynamic_parameters['dynamic_param']

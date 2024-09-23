@@ -4,7 +4,7 @@ import pytest
 import csdl_alpha as csdl
 import ozone as ozone
 
-def f(ozone_vars:ozone.FuncVars):
+def f(ozone_vars:ozone.ODEVars):
     ozone_vars.d_states['y'] = -ozone_vars.states['y']
 
 def build_and_run_ode(

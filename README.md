@@ -12,7 +12,7 @@
 `Ozone` also uses [modopt](https://github.com/LSDOlab/modopt) to interface to optimization algorithms (documentation [here](https://modopt.readthedocs.io/en/latest/)).
 
 We encourage users to look at the examples:
-* [Tutuorial](examples/simple_examples/tutorial.ipynb)
+* [Tutorial](examples/simple_examples/tutorial.ipynb)
 * [Lotka Volterra](examples/simple_examples/lotka_volterra.py)
 * [Van der Pol Oscillator](examples/paper_examples/2_van_der_pol_oscillator.py) (from the [`Dymos` documentation](https://openmdao.org/dymos/docs/latest/examples/vanderpol/vanderpol.html))
 * [Lunar Ascent System](examples/paper_examples/1_lunar_ascent.py) (from [Sandoval et al.](https://arc.aiaa.org/doi/abs/10.2514/6.2022-0949))

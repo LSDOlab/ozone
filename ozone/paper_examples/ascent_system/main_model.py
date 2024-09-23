@@ -3,7 +3,7 @@ import csdl_alpha as csdl
 import ozone as ozone
 import numpy as np
 
-def ode_func(ozone_vars:ozone.FuncVars):
+def ode_func(ozone_vars:ozone.ODEVars):
     g0 = 1.625
     R0 = 1738100
     vex = 3049.87

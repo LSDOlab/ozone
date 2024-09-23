@@ -2,7 +2,7 @@ from typing import Callable
 from csdl_alpha import Variable
 from ozone.collections import ProfileOutputs, FieldOutputs
 
-class FuncVars(object):
+class ODEVars(object):
     def __init__(
             self,
             states,
@@ -92,8 +92,8 @@ class FuncWrapper(object):
             states:dict,
             parameters:dict,
             num_nodes:int,
-        )->FuncVars:
-        func_vars:FuncVars = FuncVars(states, parameters, num_nodes)
+        )->ODEVars:
+        func_vars:ODEVars = ODEVars(states, parameters, num_nodes)
         self.f(func_vars, *self.args, **self.kwargs)
         func_vars.post_process()
 

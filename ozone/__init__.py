@@ -11,5 +11,5 @@ import ozone.approaches as approaches
 import ozone.methods as methods
 
 # for typehinting (Not necessary for the user to import)
-from ozone.func_wrapper import FuncVars
+from ozone.func_wrapper import ODEVars
 from ozone.collections import IntegratorOutputs

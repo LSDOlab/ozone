@@ -7,7 +7,7 @@ import numpy as np
 from ozone.paper_examples.trajectory_optimization.aero import aero, atmosphere
 from ozone.paper_examples.trajectory_optimization.rotor import rotor
 
-def ode_function(ozone_vars:ozone.FuncVars, options):
+def ode_function(ozone_vars:ozone.ODEVars, options):
     # Pre-processing
     num_nodes = ozone_vars.num_nodes
     v = ozone_vars.states['v']

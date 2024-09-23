@@ -9,7 +9,7 @@ from scipy.sparse import kron, eye, hstack, csr_matrix
 import time
 
 def ode_function(
-        ozone_vars:ozone.FuncVars, dx:float, nx:int, zero_bc:int, pi_bc:int, beta_t:float, beta_u:float, gamma:float,
+        ozone_vars:ozone.ODEVars, dx:float, nx:int, zero_bc:int, pi_bc:int, beta_t:float, beta_u:float, gamma:float,
     ):
     beta_t_g = beta_t*(np.exp(-gamma))
     heaviside_array = np.zeros((nx, 1))

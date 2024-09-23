@@ -8,4 +8,4 @@ import ozone.timespan as timespans
 import ozone.approaches as approaches
 
 # for the ode function typehinting
-from ozone.func_wrapper import FuncVars
+from ozone.func_wrapper import ODEVars

@@ -3,7 +3,7 @@ import csdl_alpha as csdl
 import ozone as ozone
 import numpy as np
 
-def ode_func(ozone_vars:ozone.FuncVars):
+def ode_func(ozone_vars:ozone.ODEVars):
     x0 = ozone_vars.states['x0']
     x1 = ozone_vars.states['x1']
     j = ozone_vars.states['J']

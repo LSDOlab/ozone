@@ -112,7 +112,7 @@ def test_ode_function_api():
     a_static = csdl.Variable(name = 'a_static', value = np.ones((1,)))
     
     # solve once successfully
-    def f(ozone_vars:ozone.FuncVars):
+    def f(ozone_vars:ozone.ODEVars):
         a_contracted = csdl.sum(ozone_vars.dynamic_parameters['a_dynamic'], axes=(1,))
         ozone_vars.d_states['x'] = -ozone_vars.states['x']*a_contracted.expand(ozone_vars.states['x'].shape, action='i->ijk')*a_static
         ozone_vars.field_outputs['x'] = ozone_vars.states['x']
@@ -125,7 +125,7 @@ def test_ode_function_api():
     outputs = ode_problem.solve()
 
     # extra key:
-    def f(ozone_vars:ozone.FuncVars):
+    def f(ozone_vars:ozone.ODEVars):
         a_contracted = csdl.sum(ozone_vars.dynamic_parameters['a_dynamic'], axes=(1,))
         ozone_vars.d_states['x'] = -ozone_vars.states['x']*a_contracted.expand(ozone_vars.states['x'].shape, action='i->ijk')*a_static
         ozone_vars.d_states['x1'] = -ozone_vars.states['x']*a_contracted.expand(ozone_vars.states['x'].shape, action='i->ijk')*a_static
@@ -140,7 +140,7 @@ def test_ode_function_api():
         outputs = ode_problem.solve()
 
     # key not found:
-    def f(ozone_vars:ozone.FuncVars):
+    def f(ozone_vars:ozone.ODEVars):
         a_contracted = csdl.sum(ozone_vars.dynamic_parameters['a_dynamic'], axes=(1,))
         ozone_vars.d_states['x1'] = -ozone_vars.states['x']*a_contracted.expand(ozone_vars.states['x'].shape, action='i->ijk')*a_static
         ozone_vars.field_outputs['x'] = ozone_vars.states['x']
@@ -154,7 +154,7 @@ def test_ode_function_api():
         outputs = ode_problem.solve()
 
     # state shape wrong:
-    def f(ozone_vars:ozone.FuncVars):
+    def f(ozone_vars:ozone.ODEVars):
         a_contracted = csdl.sum(ozone_vars.dynamic_parameters['a_dynamic'], axes=(1,))
         dx = -ozone_vars.states['x']*a_contracted.expand(ozone_vars.states['x'].shape, action='i->ijk')*a_static
         ozone_vars.d_states['x'] = dx[0]
@@ -169,7 +169,7 @@ def test_ode_function_api():
         outputs = ode_problem.solve()
 
     # profile outputs shape wrong:
-    def f(ozone_vars:ozone.FuncVars):
+    def f(ozone_vars:ozone.ODEVars):
         a_contracted = csdl.sum(ozone_vars.dynamic_parameters['a_dynamic'], axes=(1,))
         dx = -ozone_vars.states['x']*a_contracted.expand(ozone_vars.states['x'].shape, action='i->ijk')*a_static
         ozone_vars.d_states['x'] = dx
@@ -184,7 +184,7 @@ def test_ode_function_api():
         outputs = ode_problem.solve()
 
     # field outputs shape wrong:
-    def f(ozone_vars:ozone.FuncVars):
+    def f(ozone_vars:ozone.ODEVars):
         a_contracted = csdl.sum(ozone_vars.dynamic_parameters['a_dynamic'], axes=(1,))
         dx = -ozone_vars.states['x']*a_contracted.expand(ozone_vars.states['x'].shape, action='i->ijk')*a_static
         ozone_vars.d_states['x'] = dx
@@ -199,7 +199,7 @@ def test_ode_function_api():
         outputs = ode_problem.solve()
 
     # args wrong
-    def f(ozone_vars:ozone.FuncVars, d):
+    def f(ozone_vars:ozone.ODEVars, d):
         a_contracted = csdl.sum(ozone_vars.dynamic_parameters['a_dynamic'], axes=(1,))
         dx = -ozone_vars.states['x']*a_contracted.expand(ozone_vars.states['x'].shape, action='i->ijk')*a_static*d
         ozone_vars.d_states['x'] = dx
@@ -214,7 +214,7 @@ def test_ode_function_api():
         outputs = ode_problem.solve()
 
     # kwargs wrong
-    def f(ozone_vars:ozone.FuncVars, d):
+    def f(ozone_vars:ozone.ODEVars, d):
         a_contracted = csdl.sum(ozone_vars.dynamic_parameters['a_dynamic'], axes=(1,))
         dx = -ozone_vars.states['x']*a_contracted.expand(ozone_vars.states['x'].shape, action='i->ijk')*a_static
         ozone_vars.d_states['x'] = dx
