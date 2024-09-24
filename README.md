@@ -30,7 +30,7 @@ If `csdl_alpha` or `modopt` failed to install, try:
 pip install git+https://github.com/LSDOlab/csdl_alpha.git
 pip install git+https://github.com/LSDOlab/modopt.git
 ```
-To take advantage of `CSDL`'s JAX backend, you'll need to have JAX installed. You can follow the [installation guide](https://github.com/jax-ml/jax?tab=readme-ov-file#installation) for instructions.
+To take advantage of `CSDL`'s JAX backend, you'll need to have JAX installed. You can follow JAX's [installation guide](https://github.com/jax-ml/jax?tab=readme-ov-file#installation) for instructions.
 
 
 # License
