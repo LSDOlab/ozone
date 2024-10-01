@@ -9,7 +9,7 @@ def get_model_ascent_system(
         approach:ozone.approaches._Approach,
         method:str,
         num:int,
-    )->tuple[csdl.Recorder, str, dict]:
+    )->csdl.Recorder:
 
     #### See inside this function to see CSDL/Ozone implementation ####
     recorder, _, _ = build_recorder(approach, method, num, plot=True)
@@ -27,13 +27,12 @@ if __name__ == '__main__':
         method = method,
         num = num_times,
     )
-    additional_outputs = [rec._find_variables_by_name(name)[0] for name in ['full_rx', 'full_ry', 'full_rz', 'full_Vx', 'full_Vy', 'full_Vz', 'final_time']]
 
     # JIT Compile model/derivative evaluation to JAX
     jax_sim = csdl.experimental.JaxSimulator(
         recorder=rec,
         derivatives_kwargs={'loop':False},
-        additional_outputs=additional_outputs,
+        additional_outputs=rec.find_variable_by_name('full_rx', 'full_ry', 'full_rz', 'full_Vx', 'full_Vy', 'full_Vz', 'final_time'),
     )
 
     # Solve Optimization problem

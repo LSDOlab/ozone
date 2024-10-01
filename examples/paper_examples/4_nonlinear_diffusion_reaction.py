@@ -15,7 +15,7 @@ def get_model_pde_control(
         nx:int = 110,
         tf:int = 2.0,
         plot = False
-    )->tuple[csdl.Recorder, str, dict]:
+    )->csdl.Recorder:
     m = 1000
     n_dv = nt/m+1
     if n_dv == int(n_dv):
@@ -56,7 +56,7 @@ if __name__ == '__main__':
     # JIT Compile model/derivative evaluation to JAX
     jax_sim = csdl.experimental.JaxSimulator(
         recorder=rec,
-        additional_outputs=[rec._find_variables_by_name('x_full')[0]],
+        additional_outputs=rec.find_variable_by_name('x_full'),
         derivatives_kwargs={'loop':True}
     )
 

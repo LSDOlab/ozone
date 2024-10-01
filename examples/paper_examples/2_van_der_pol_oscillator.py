@@ -12,7 +12,7 @@ def get_model_van_der_pol(
         method:str,
         num_times:int = 40,
         tf:float = 15,
-    )->tuple[csdl.Recorder, str, dict]:
+    )->csdl.Recorder:
 
     # See inside this function to see CSDL/Ozone implementation
     recorder, _, _ = build_recorder(approach, method, num_times, tf, plot=True)
@@ -46,7 +46,7 @@ if __name__ == '__main__':
         # JIT Compile model/derivative evaluation to JAX
         jax_sim = csdl.experimental.JaxSimulator(
             recorder=rec,
-            additional_outputs=[rec._find_variables_by_name(name)[0] for name in ['full_x0', 'full_x1', 'full_J', 'full_h', 'full_u']],
+            additional_outputs=rec.find_variable_by_name('full_x0', 'full_x1', 'full_J', 'full_h', 'full_u'),
             derivatives_kwargs={'loop':False}
         )
         # rec.start()

@@ -29,8 +29,8 @@ if __name__ == '__main__':
         num = num,
     )
 
-    x_plot_variable = rec._find_variables_by_name('x_plot')[0]
-    h_plot_variable = rec._find_variables_by_name('h_plot')[0]
+    x_plot_variable = rec.find_variable_by_name('x_plot')
+    h_plot_variable = rec.find_variable_by_name('h_plot')
 
     # JIT Compile model/derivative evaluation to JAX
     jax_sim = csdl.experimental.JaxSimulator(
@@ -43,9 +43,9 @@ if __name__ == '__main__':
     x_initial = jax_sim[x_plot_variable]
     h_initial = jax_sim[h_plot_variable]
 
-    control_x_initial = rec._find_variables_by_name('control_x')[0].value
-    control_z_initial = rec._find_variables_by_name('control_z')[0].value
-    control_alpha_initial = rec._find_variables_by_name('control_alpha')[0].value
+    control_x_initial = rec.find_variable_by_name('control_x').value
+    control_z_initial = rec.find_variable_by_name('control_z').value
+    control_alpha_initial = rec.find_variable_by_name('control_alpha').value
     # Solve Optimization problem
     import modopt as mo
     prob = mo.CSDLAlphaProblem(problem_name='trajectory_opt',simulator=jax_sim)
@@ -76,17 +76,17 @@ if __name__ == '__main__':
     f = plt.figure(figsize=(11, 2.5))
     a = f.add_subplot(1,1,1)
     f.suptitle(f'States after {max_iter} iterations', fontsize = 20, y = 0.945)
-    a.plot(rec._find_variables_by_name('v_plot')[0].value)
-    a.plot(rec._find_variables_by_name('gamma_plot')[0].value)
-    a.plot(rec._find_variables_by_name('e_plot')[0].value)
+    a.plot(rec.find_variable_by_name('v_plot').value)
+    a.plot(rec.find_variable_by_name('gamma_plot').value)
+    a.plot(rec.find_variable_by_name('e_plot').value)
     a.legend(['v','gamma','e'])
 
     f = plt.figure(figsize=(11, 2.5))
     a = f.add_subplot(1,1,1)
     f.suptitle(f'Controls after {max_iter} iterations', fontsize = 20, y = 0.945)
-    a.plot(rec._find_variables_by_name('control_x')[0].value)
-    a.plot(rec._find_variables_by_name('control_z')[0].value)
-    a.plot(rec._find_variables_by_name('control_alpha')[0].value)
+    a.plot(rec.find_variable_by_name('control_x').value)
+    a.plot(rec.find_variable_by_name('control_z').value)
+    a.plot(rec.find_variable_by_name('control_alpha').value)
     a.legend(['control_x','control_z','control_alpha'])
 
     plt.show()
