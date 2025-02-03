@@ -386,6 +386,10 @@ if __name__ == '__main__':
                 a.set_xlim(left=plot_config['left_x'])
             if "bottom_y" in plot_config:
                 a.set_ylim(bottom=plot_config['bottom_y'])
+            if "1" in plot_key:
+                if "Ascent" in title:
+                    a.set_xlim(left=-3000, right=55000)
+
             plt.grid()
 
         # get legend settings
